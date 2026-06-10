@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client'
 import fs from 'fs'
 import path from 'path'
 
-const DB_SCHEMA_VERSION = '2026-06-10-engagement'
+const DB_SCHEMA_VERSION = '2026-06-10-riohacha-routes'
 
 function prepareSqliteForServerless() {
   if (!process.env.VERCEL) return

@@ -10,7 +10,7 @@ import { EditorialColumn } from '@/components/newspaper/EditorialColumn'
 import { CampusRouteSection, EngagementSpotlight } from '@/components/newspaper/EngagementPanel'
 import { Footer } from '@/components/newspaper/Footer'
 import Link from 'next/link'
-import type { HomePoll, HomeRoutePoint, PublicationOfDay } from '@/lib/content'
+import type { HomePoll, HomeRoute, PublicationOfDay } from '@/lib/content'
 
 type MobileTab = 'noticias' | 'columna'
 type PublicSession = {
@@ -30,10 +30,10 @@ interface HomeClientProps {
   session: PublicSession
   publicationOfDay: PublicationOfDay | null
   activePoll: HomePoll | null
-  routePoints: HomeRoutePoint[]
+  routes: HomeRoute[]
 }
 
-export function HomeClient({ articles, columns, categories, events, session, publicationOfDay, activePoll, routePoints }: HomeClientProps) {
+export function HomeClient({ articles, columns, categories, events, session, publicationOfDay, activePoll, routes }: HomeClientProps) {
   const [activeCategory, setActiveCategory] = useState<Category | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [mobileTab, setMobileTab] = useState<MobileTab>('noticias')
@@ -71,7 +71,7 @@ export function HomeClient({ articles, columns, categories, events, session, pub
         <EngagementSpotlight publicationOfDay={publicationOfDay} activePoll={activePoll} />
       </section>
 
-      <CampusRouteSection routePoints={routePoints} />
+      <CampusRouteSection routes={routes} />
 
       <main id="main-content" className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 overflow-x-hidden">
         <div className="lg:grid lg:grid-cols-[200px_minmax(0,1fr)_220px] lg:gap-0 py-8">

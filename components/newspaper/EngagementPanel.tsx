@@ -1,9 +1,10 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import type { CSSProperties } from 'react'
 import Link from 'next/link'
 import { Bus, Heart, MapPin, MessageCircle, Navigation, Sparkles, ThumbsUp } from 'lucide-react'
-import type { HomePoll, HomeRoutePoint, PublicationOfDay } from '@/lib/content'
+import type { HomePoll, HomeRoute, PublicationOfDay } from '@/lib/content'
 
 const reactionLabels = {
   LIKE: 'Me gusta',
@@ -22,14 +23,14 @@ type ReactionType = keyof typeof reactionLabels
 interface EngagementPanelProps {
   publicationOfDay: PublicationOfDay | null
   activePoll: HomePoll | null
-  routePoints: HomeRoutePoint[]
+  routes: HomeRoute[]
 }
 
-export function EngagementPanel({ publicationOfDay, activePoll, routePoints }: EngagementPanelProps) {
+export function EngagementPanel({ publicationOfDay, activePoll, routes }: EngagementPanelProps) {
   return (
     <div className="space-y-6">
       <EngagementSpotlight publicationOfDay={publicationOfDay} activePoll={activePoll} />
-      <CampusRouteMap routePoints={routePoints} />
+      <CampusRouteSection routes={routes} />
     </div>
   )
 }
@@ -47,8 +48,8 @@ export function EngagementSpotlight({ publicationOfDay, activePoll }: Pick<Engag
   )
 }
 
-export function CampusRouteSection({ routePoints }: Pick<EngagementPanelProps, 'routePoints'>) {
-  return <CampusRouteMap routePoints={routePoints} />
+export function CampusRouteSection({ routes }: Pick<EngagementPanelProps, 'routes'>) {
+  return <CampusRouteMap routes={routes} />
 }
 
 function PublicationOfDayCard({ publication, variant = 'compact' }: { publication: PublicationOfDay | null; variant?: 'compact' | 'hero' }) {
@@ -83,7 +84,7 @@ function PublicationOfDayCard({ publication, variant = 'compact' }: { publicatio
           </h2>
         </div>
       )}
-      <article className={`${hero ? 'h-full flex flex-col' : 'border border-border bg-background p-3'}`}>
+      <article className={hero ? 'h-full flex flex-col' : 'border border-border bg-background p-3'}>
         <p className="text-[10px] font-sans font-semibold uppercase tracking-widest text-primary mb-2">Publicacion del dia / {publication.category}</p>
         <h3 className={`font-display font-bold leading-tight text-foreground mb-3 ${hero ? 'text-3xl md:text-5xl text-balance' : 'text-base leading-snug'}`} style={{ fontFamily: 'var(--font-display)' }}>
           <Link href={`/articulos/${publication.slug}`} className="hover:text-primary transition-colors">
@@ -128,10 +129,97 @@ function bumpReaction(counts: { type: string; count: number }[], type: string) {
   return [...counts, { type, count: 1 }]
 }
 
-function CampusRouteMap({ routePoints }: { routePoints: HomeRoutePoint[] }) {
-  if (routePoints.length === 0) return null
-  const first = routePoints[0]
-  const last = routePoints[routePoints.length - 1]
+const tileSize = 256
+const mapZoom = 13
+const mapWidth = 1000
+const mapHeight = 520
+
+function lngToWorldX(lng: number) {
+  return ((lng + 180) / 360) * Math.pow(2, mapZoom) * tileSize
+}
+
+function latToWorldY(lat: number) {
+  const sin = Math.sin((lat * Math.PI) / 180)
+  return (0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI)) * Math.pow(2, mapZoom) * tileSize
+}
+
+function buildMapProjection(route: HomeRoute) {
+  const worldPoints = route.points.map((point) => ({
+    ...point,
+    x: lngToWorldX(point.lng),
+    y: latToWorldY(point.lat),
+  }))
+  const minX = Math.min(...worldPoints.map((point) => point.x))
+  const maxX = Math.max(...worldPoints.map((point) => point.x))
+  const minY = Math.min(...worldPoints.map((point) => point.y))
+  const maxY = Math.max(...worldPoints.map((point) => point.y))
+  const routeWidth = Math.max(maxX - minX, 1)
+  const routeHeight = Math.max(maxY - minY, 1)
+  const desiredAspect = mapWidth / mapHeight
+  let viewWidth = Math.max(routeWidth * 2.7, 1300)
+  let viewHeight = Math.max(routeHeight * 2.7, 760)
+
+  if (viewWidth / viewHeight > desiredAspect) {
+    viewHeight = viewWidth / desiredAspect
+  } else {
+    viewWidth = viewHeight * desiredAspect
+  }
+
+  const centerX = (minX + maxX) / 2
+  const centerY = (minY + maxY) / 2
+  const left = centerX - viewWidth / 2
+  const top = centerY - viewHeight / 2
+  const projected = worldPoints.map((point) => ({
+    ...point,
+    px: ((point.x - left) / viewWidth) * mapWidth,
+    py: ((point.y - top) / viewHeight) * mapHeight,
+  }))
+  const tiles = []
+  const minTileX = Math.floor(left / tileSize)
+  const maxTileX = Math.floor((left + viewWidth) / tileSize)
+  const minTileY = Math.floor(top / tileSize)
+  const maxTileY = Math.floor((top + viewHeight) / tileSize)
+
+  for (let x = minTileX; x <= maxTileX; x += 1) {
+    for (let y = minTileY; y <= maxTileY; y += 1) {
+      tiles.push({
+        x,
+        y,
+        left: ((x * tileSize - left) / viewWidth) * 100,
+        top: ((y * tileSize - top) / viewHeight) * 100,
+        width: (tileSize / viewWidth) * 100,
+        height: (tileSize / viewHeight) * 100,
+      })
+    }
+  }
+
+  return { projected, tiles }
+}
+
+function pathFromProjected(points: { px: number; py: number }[]) {
+  return points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.px.toFixed(1)} ${point.py.toFixed(1)}`).join(' ')
+}
+
+function CampusRouteMap({ routes }: { routes: HomeRoute[] }) {
+  const [selectedRouteKey, setSelectedRouteKey] = useState(routes[0]?.key ?? '')
+  const selectedRoute = routes.find((route) => route.key === selectedRouteKey) ?? routes[0]
+
+  if (!selectedRoute || selectedRoute.points.length === 0) return null
+
+  const { projected, tiles } = buildMapProjection(selectedRoute)
+  const first = selectedRoute.points[0]
+  const last = selectedRoute.points[selectedRoute.points.length - 1]
+  const routePath = pathFromProjected(projected)
+  const busStyle = {
+    '--bus-p0-x': `${projected[0]?.px ?? 0}px`,
+    '--bus-p0-y': `${projected[0]?.py ?? 0}px`,
+    '--bus-p1-x': `${projected[1]?.px ?? projected[0]?.px ?? 0}px`,
+    '--bus-p1-y': `${projected[1]?.py ?? projected[0]?.py ?? 0}px`,
+    '--bus-p2-x': `${projected[2]?.px ?? projected[1]?.px ?? 0}px`,
+    '--bus-p2-y': `${projected[2]?.py ?? projected[1]?.py ?? 0}px`,
+    '--bus-p3-x': `${projected[projected.length - 1]?.px ?? 0}px`,
+    '--bus-p3-y': `${projected[projected.length - 1]?.py ?? 0}px`,
+  } as CSSProperties
 
   return (
     <section aria-label="Ruta a tiempo real" className="max-w-7xl mx-auto px-4 md:px-6 py-6">
@@ -144,40 +232,71 @@ function CampusRouteMap({ routePoints }: { routePoints: HomeRoutePoint[] }) {
           Bus en movimiento
         </span>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] border border-border bg-background overflow-hidden">
-        <div className="relative h-[360px] overflow-hidden border-b lg:border-b-0 lg:border-r border-border real-route-map">
-          <div className="absolute inset-0 bg-background/5" />
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] border border-border bg-background overflow-hidden">
+        <div className="relative h-[380px] overflow-hidden border-b lg:border-b-0 lg:border-r border-border bg-muted">
+          {tiles.map((tile) => (
+            <img
+              key={`${tile.x}-${tile.y}`}
+              src={`https://tile.openstreetmap.org/${mapZoom}/${tile.x}/${tile.y}.png`}
+              alt=""
+              aria-hidden="true"
+              className="absolute max-w-none select-none"
+              style={{
+                left: `${tile.left}%`,
+                top: `${tile.top}%`,
+                width: `${tile.width}%`,
+                height: `${tile.height}%`,
+              }}
+              draggable={false}
+            />
+          ))}
+          <div className="absolute inset-0 bg-background/10" />
           <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 520" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M150 380 C260 330 330 305 430 278 C555 242 650 204 835 118" fill="none" stroke="rgba(31, 97, 51, 0.25)" strokeWidth="22" strokeLinecap="round" />
-            <path className="real-route-line" d="M150 380 C260 330 330 305 430 278 C555 242 650 204 835 118" fill="none" stroke="var(--primary)" strokeWidth="8" strokeLinecap="round" />
+            <path d={routePath} fill="none" stroke="rgba(31, 97, 51, 0.28)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
+            <path className="real-route-line" d={routePath} fill="none" stroke="var(--primary)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <div className="absolute left-[13%] top-[72%] flex items-center gap-2 rounded-sm bg-background/95 border border-border px-2 py-1 shadow-sm">
+          <div
+            className="absolute flex items-center gap-2 rounded-sm bg-background/95 border border-border px-2 py-1 shadow-sm"
+            style={{ left: `${(projected[0].px / mapWidth) * 100}%`, top: `${(projected[0].py / mapHeight) * 100}%`, transform: 'translate(-8%, -120%)' }}
+          >
             <MapPin size={13} className="text-primary" />
             <span className="font-sans text-xs font-semibold">{first.title}</span>
           </div>
-          <div className="absolute right-[9%] top-[18%] flex items-center gap-2 rounded-sm bg-background/95 border border-border px-2 py-1 shadow-sm">
+          <div
+            className="absolute flex items-center gap-2 rounded-sm bg-background/95 border border-border px-2 py-1 shadow-sm"
+            style={{ left: `${(projected[projected.length - 1].px / mapWidth) * 100}%`, top: `${(projected[projected.length - 1].py / mapHeight) * 100}%`, transform: 'translate(-90%, -120%)' }}
+          >
             <Navigation size={13} className="text-accent" />
             <span className="font-sans text-xs font-semibold">{last.title}</span>
           </div>
-          <div className="real-route-bus absolute flex items-center justify-center w-9 h-9 rounded-full bg-golden text-golden-foreground border-2 border-background shadow-lg">
+          <div className="real-route-bus absolute flex items-center justify-center w-9 h-9 rounded-full bg-golden text-golden-foreground border-2 border-background shadow-lg" style={busStyle}>
             <Bus size={18} />
           </div>
           <div className="absolute left-4 bottom-4 rounded-sm bg-background/95 border border-border px-3 py-2">
             <p className="font-sans text-[10px] uppercase tracking-widest text-muted-foreground">Mapa real de Riohacha</p>
-            <p className="font-sans text-xs font-semibold text-foreground">Simulacion de recorrido U - Centro</p>
+            <p className="font-sans text-xs font-semibold text-foreground">Ruta {selectedRoute.name}: U - {last.title}</p>
           </div>
         </div>
 
         <div className="p-4 space-y-3">
           <p className="font-sans text-xs leading-relaxed text-muted-foreground">
-            Recorrido simulado en tiempo real sobre mapa real de Riohacha. El bus anima el trayecto desde el campus hacia el centro.
+            Escoge la ruta para ver el recorrido simulado sobre mapa real de Riohacha.
           </p>
-          <div className="space-y-2">
-            {routePoints.slice(1, -1).map((point) => (
-              <div
-                key={point.id}
-                className="flex items-start gap-2 border border-border px-2.5 py-2"
+          <div className="grid grid-cols-2 gap-2">
+            {routes.map((route) => (
+              <button
+                key={route.key}
+                type="button"
+                onClick={() => setSelectedRouteKey(route.key)}
+                className={`border px-2 py-1.5 text-left font-sans text-[10px] font-semibold uppercase tracking-wide transition-colors ${selectedRoute.key === route.key ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-primary/60'}`}
               >
+                {route.name}
+              </button>
+            ))}
+          </div>
+          <div className="space-y-2">
+            {selectedRoute.points.map((point) => (
+              <div key={point.id} className="flex items-start gap-2 border border-border px-2.5 py-2">
                 <span className="mt-1 h-2 w-2 rotate-45 bg-primary flex-shrink-0" />
                 <div>
                   <p className="font-sans text-xs font-semibold text-foreground">{point.title}</p>

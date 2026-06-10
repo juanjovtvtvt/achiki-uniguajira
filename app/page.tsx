@@ -1,9 +1,9 @@
 import { HomeClient } from '@/app/home-client'
 import { getSession } from '@/lib/auth'
-import { getActivePoll, getArticles, getCampusRoute, getCategories, getColumns, getEvents, getPublicationOfDay } from '@/lib/content'
+import { getActivePoll, getArticles, getCampusRoutes, getCategories, getColumns, getEvents, getPublicationOfDay } from '@/lib/content'
 
 export default async function HomePage() {
-  const [articles, columns, categories, events, session, publicationOfDay, activePoll, routePoints] = await Promise.all([
+  const [articles, columns, categories, events, session, publicationOfDay, activePoll, routes] = await Promise.all([
     getArticles(),
     getColumns(),
     getCategories(),
@@ -11,7 +11,7 @@ export default async function HomePage() {
     getSession(),
     getPublicationOfDay(),
     getActivePoll(),
-    getCampusRoute(),
+    getCampusRoutes(),
   ])
 
   return (
@@ -23,7 +23,7 @@ export default async function HomePage() {
       session={session}
       publicationOfDay={publicationOfDay}
       activePoll={activePoll}
-      routePoints={routePoints}
+      routes={routes}
     />
   )
 }

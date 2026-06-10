@@ -160,35 +160,11 @@
   animation: route-line 6s ease-in-out infinite alternate;
 }
 
-.real-route-map {
-  background-color: var(--muted);
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04)),
-    url('https://tile.openstreetmap.org/14/4876/7670.png'),
-    url('https://tile.openstreetmap.org/14/4877/7670.png'),
-    url('https://tile.openstreetmap.org/14/4876/7671.png'),
-    url('https://tile.openstreetmap.org/14/4877/7671.png');
-  background-position:
-    center,
-    left top,
-    right top,
-    left bottom,
-    right bottom;
-  background-size:
-    cover,
-    50% 50%,
-    50% 50%,
-    50% 50%,
-    50% 50%;
-  background-repeat: no-repeat;
-}
-
 @keyframes real-route-bus {
-  0% { left: 14%; top: 72%; transform: translate(-50%, -50%) rotate(-24deg); }
-  25% { left: 32%; top: 61%; transform: translate(-50%, -50%) rotate(-20deg); }
-  50% { left: 47%; top: 52%; transform: translate(-50%, -50%) rotate(-16deg); }
-  75% { left: 65%; top: 39%; transform: translate(-50%, -50%) rotate(-22deg); }
-  100% { left: 84%; top: 22%; transform: translate(-50%, -50%) rotate(-28deg); }
+  0% { left: var(--bus-p0-x); top: var(--bus-p0-y); transform: translate(-50%, -50%) rotate(-18deg); }
+  33% { left: var(--bus-p1-x); top: var(--bus-p1-y); transform: translate(-50%, -50%) rotate(-10deg); }
+  66% { left: var(--bus-p2-x); top: var(--bus-p2-y); transform: translate(-50%, -50%) rotate(-18deg); }
+  100% { left: var(--bus-p3-x); top: var(--bus-p3-y); transform: translate(-50%, -50%) rotate(-24deg); }
 }
 
 @keyframes real-route-line {

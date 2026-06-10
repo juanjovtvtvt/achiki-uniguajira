@@ -22,12 +22,19 @@ export type HomePoll = {
 
 export type HomeRoutePoint = {
   id: number
+  routeKey: string
   title: string
   description: string | null
   lat: number
   lng: number
   progress: number
   order: number
+}
+
+export type HomeRoute = {
+  key: string
+  name: string
+  points: HomeRoutePoint[]
 }
 
 function formatDate(date?: Date | null) {
@@ -195,6 +202,7 @@ export async function getCampusRoute(): Promise<HomeRoutePoint[]> {
     orderBy: { order: 'asc' },
     select: {
       id: true,
+      routeKey: true,
       title: true,
       description: true,
       lat: true,
@@ -203,6 +211,44 @@ export async function getCampusRoute(): Promise<HomeRoutePoint[]> {
       order: true,
     },
   })
+}
+
+const routeNames: Record<string, string> = {
+  marbella: 'Marbella',
+  majayura: 'Majayura',
+  '15-de-mayo': '15 de Mayo',
+  '15-derecho': '15 Derecho',
+  'centro-coquivacoa': 'Centro Coquivacoa',
+  dividivi: 'Dividivi',
+  'la-20': 'La 20',
+  '27-37': '27-37',
+}
+
+export async function getCampusRoutes(): Promise<HomeRoute[]> {
+  const points = await prisma.routePoint.findMany({
+    orderBy: [{ routeKey: 'asc' }, { order: 'asc' }],
+    select: {
+      id: true,
+      routeKey: true,
+      title: true,
+      description: true,
+      lat: true,
+      lng: true,
+      progress: true,
+      order: true,
+    },
+  })
+
+  const grouped = new Map<string, HomeRoutePoint[]>()
+  for (const point of points) {
+    grouped.set(point.routeKey, [...(grouped.get(point.routeKey) ?? []), point])
+  }
+
+  return Array.from(grouped.entries()).map(([key, routePoints]) => ({
+    key,
+    name: routeNames[key] ?? key,
+    points: routePoints,
+  }))
 }
 
 export async function getArticleBySlug(slug: string, options?: { includeDrafts?: boolean }) {
