@@ -1,0 +1,50 @@
+ACHIKI UNIGUAJIRA
+
+Esta carpeta contiene el codigo fuente descargado desde v0/Vercel.
+
+Enlaces actuales:
+- Sitio local: http://localhost:3000
+- Admin local: http://localhost:3000/admin
+- Sitio en Vercel: https://achiki-uniguajira.vercel.app
+- Admin en Vercel: https://achiki-uniguajira.vercel.app/admin
+
+Para abrirlo en Visual Studio Code:
+1. Haz doble clic en ABRIR_EN_VISUAL.bat
+2. O abre Visual Studio Code y selecciona esta carpeta:
+   C:\Users\pc\Downloads\ACHIKI
+
+Para abrirlo como programa:
+1. Haz doble clic en ACHIKI.exe
+2. Espera a que la terminal diga Ready.
+3. Se abrira http://localhost:3000 en el navegador.
+
+Archivo principal de la pagina:
+app\page.tsx
+
+Componentes principales:
+components\newspaper\
+
+Para correr la pagina:
+1. Haz doble clic en INICIAR_ACHIKI.bat
+2. Cuando termine, abre:
+   http://localhost:3000
+
+Si el script dice que falta Node.js, instala Node.js LTS desde:
+https://nodejs.org/
+
+Base de datos:
+- Archivo local: prisma\achiki.db
+- Esquema: prisma\schema.prisma
+- Panel visual recomendado: Prisma Studio con pnpm db:studio
+
+Admin:
+- Usuario: uniguajiraadmin
+- La clave esta configurada en el entorno local y en Vercel.
+
+Usuarios:
+- Los autores de la base pueden iniciar sesion con su correo.
+- Clave inicial local de autores: achiki2026
+- Ejemplo: camila.ipuana@uniguajira.edu.co
+
+Guia completa:
+GUIA-ADMIN-ACHIKI.md

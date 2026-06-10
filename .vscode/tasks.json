@@ -1,0 +1,22 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Iniciar ACHIKI",
+      "type": "shell",
+      "command": "${workspaceFolder}\\INICIAR_ACHIKI.bat",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Abrir ACHIKI en navegador",
+      "type": "shell",
+      "command": "start http://localhost:3000",
+      "problemMatcher": []
+    }
+  ]
+}

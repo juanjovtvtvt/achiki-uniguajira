@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Program {
+  id        Int      @id @default(autoincrement())
+  name      String
+  faculty   String?
+  campus    String?
+  users     User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id                 Int                 @id @default(autoincrement())
+  programId          Int?
+  program            Program?            @relation(fields: [programId], references: [id])
+  name               String
+  email              String              @unique
+  passwordHash       String?
+  authProvider       String              @default("credentials")
+  googleId           String?             @unique
+  avatarUrl          String?
+  role               String              @default("READER")
+  status             String              @default("ACTIVE")
+  bio                String?
+  publicSignature    String?
+  reviewArea         String?
+  approvalLevel      String?
+  systemPermissions  String?
+  preferences        String?
+  lastLoginAt        DateTime?
+  publications       Publication[]
+  comments           Comment[]
+  eventRegistrations EventRegistration[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
+model Category {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  slug         String        @unique
+  colorClass   String?
+  publications Publication[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Edition {
+  id           Int           @id @default(autoincrement())
+  title        String
+  slug         String        @unique
+  publishedAt  DateTime?
+  status       String        @default("DRAFT")
+  publications Publication[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Publication {
+  id          Int                  @id @default(autoincrement())
+  authorId    Int
+  categoryId  Int
+  editionId   Int?
+  author      User                 @relation(fields: [authorId], references: [id])
+  category    Category             @relation(fields: [categoryId], references: [id])
+  edition     Edition?             @relation(fields: [editionId], references: [id])
+  type        String               @default("ARTICLE")
+  title       String
+  slug        String               @unique
+  summary     String
+  content     String?
+  excerpt     String?
+  featured    Boolean              @default(false)
+  status      String               @default("DRAFT")
+  publishedAt DateTime?
+  images      PublicationImage[]
+  comments    Comment[]
+  tags        PublicationTag[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([categoryId])
+  @@index([authorId])
+  @@index([type, status])
+}
+
+model PublicationImage {
+  id            Int         @id @default(autoincrement())
+  publicationId Int
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  url           String
+  description   String?
+  isPrimary     Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+}
+
+model Tag {
+  id           Int              @id @default(autoincrement())
+  name         String           @unique
+  slug         String           @unique
+  publications PublicationTag[]
+  createdAt    DateTime         @default(now())
+}
+
+model PublicationTag {
+  publicationId Int
+  tagId         Int
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  tag           Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  assignedAt    DateTime    @default(now())
+
+  @@id([publicationId, tagId])
+}
+
+model Comment {
+  id            Int           @id @default(autoincrement())
+  publicationId Int
+  userId        Int
+  publication   Publication   @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id])
+  content       String
+  status        String        @default("PENDING")
+  createdAt     DateTime      @default(now())
+}
+
+model Event {
+  id            Int                 @id @default(autoincrement())
+  title         String
+  slug          String              @unique
+  description   String?
+  location      String?
+  startsAt      DateTime
+  endsAt        DateTime?
+  registrations EventRegistration[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+}
+
+model EventRegistration {
+  id        Int                @id @default(autoincrement())
+  eventId   Int
+  userId    Int
+  event     Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User               @relation(fields: [userId], references: [id])
+  status    String             @default("REGISTERED")
+  createdAt DateTime           @default(now())
+
+  @@unique([eventId, userId])
+}
+
+model Subscriber {
+  id        Int                  @id @default(autoincrement())
+  email     String               @unique
+  active    Boolean              @default(true)
+  deliveries NewsletterDelivery[]
+  createdAt DateTime             @default(now())
+}
+
+model Newsletter {
+  id          Int                  @id @default(autoincrement())
+  subject     String
+  content     String?
+  status      String               @default("DRAFT")
+  sentAt      DateTime?
+  deliveries  NewsletterDelivery[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+model NewsletterDelivery {
+  id           Int            @id @default(autoincrement())
+  newsletterId Int
+  subscriberId Int
+  newsletter   Newsletter     @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
+  subscriber   Subscriber     @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  status       String         @default("PENDING")
+  createdAt    DateTime       @default(now())
+
+  @@unique([newsletterId, subscriberId])
+}
