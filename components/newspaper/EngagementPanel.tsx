@@ -232,8 +232,8 @@ function CampusRouteMap({ routes }: { routes: HomeRoute[] }) {
           Bus en movimiento
         </span>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] border border-border bg-background overflow-hidden">
-        <div className="relative h-[380px] overflow-hidden border-b lg:border-b-0 lg:border-r border-border bg-muted">
+      <div className="border border-border bg-background overflow-hidden">
+        <div className="relative h-[360px] md:h-[520px] w-full overflow-hidden border-b border-border bg-muted">
           {tiles.map((tile) => (
             <img
               key={`${tile.x}-${tile.y}`}
@@ -278,23 +278,28 @@ function CampusRouteMap({ routes }: { routes: HomeRoute[] }) {
           </div>
         </div>
 
-        <div className="p-4 space-y-3">
-          <p className="font-sans text-xs leading-relaxed text-muted-foreground">
-            Escoge la ruta para ver el recorrido simulado sobre mapa real de Riohacha.
-          </p>
-          <div className="grid grid-cols-2 gap-2">
+        <div className="p-4 space-y-4">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+            <p className="font-sans text-xs leading-relaxed text-muted-foreground max-w-xl">
+              Escoge la ruta para ver el recorrido simulado sobre mapa real de Riohacha.
+            </p>
+            <p className="font-sans text-[10px] uppercase tracking-widest text-primary">
+              {selectedRoute.name} / {selectedRoute.points.length} paradas
+            </p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
             {routes.map((route) => (
               <button
                 key={route.key}
                 type="button"
                 onClick={() => setSelectedRouteKey(route.key)}
-                className={`border px-2 py-1.5 text-left font-sans text-[10px] font-semibold uppercase tracking-wide transition-colors ${selectedRoute.key === route.key ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-primary/60'}`}
+                className={`border px-2 py-2 text-center font-sans text-[10px] font-semibold uppercase tracking-wide transition-colors min-h-11 ${selectedRoute.key === route.key ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-primary/60'}`}
               >
                 {route.name}
               </button>
             ))}
           </div>
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
             {selectedRoute.points.map((point) => (
               <div key={point.id} className="flex items-start gap-2 border border-border px-2.5 py-2">
                 <span className="mt-1 h-2 w-2 rotate-45 bg-primary flex-shrink-0" />
