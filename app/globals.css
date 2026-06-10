@@ -141,6 +141,25 @@
   to   { transform: translateX(-50%); }
 }
 
+@keyframes route-vehicle {
+  0% { left: 10%; transform: translateY(0); }
+  45% { transform: translateY(-5px); }
+  100% { left: 86%; transform: translateY(0); }
+}
+
+@keyframes route-line {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+.route-vehicle {
+  animation: route-vehicle 6s ease-in-out infinite alternate;
+}
+
+.route-line {
+  animation: route-line 6s ease-in-out infinite alternate;
+}
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;

@@ -38,6 +38,8 @@ model User {
   lastLoginAt        DateTime?
   publications       Publication[]
   comments           Comment[]
+  reactions          PublicationReaction[]
+  pollVotes          PollVote[]
   eventRegistrations EventRegistration[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
@@ -84,12 +86,27 @@ model Publication {
   images      PublicationImage[]
   comments    Comment[]
   tags        PublicationTag[]
+  reactions   PublicationReaction[]
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
 
   @@index([categoryId])
   @@index([authorId])
   @@index([type, status])
+}
+
+model PublicationReaction {
+  id            Int         @id @default(autoincrement())
+  publicationId Int
+  userId        Int?
+  anonymousId   String?
+  type          String      @default("LIKE")
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt     DateTime    @default(now())
+
+  @@index([publicationId])
+  @@unique([publicationId, anonymousId, type])
 }
 
 model PublicationImage {
@@ -129,6 +146,56 @@ model Comment {
   content       String
   status        String        @default("PENDING")
   createdAt     DateTime      @default(now())
+}
+
+model DailyPoll {
+  id        Int          @id @default(autoincrement())
+  question  String
+  active    Boolean      @default(true)
+  startsAt  DateTime     @default(now())
+  endsAt    DateTime?
+  options   PollOption[]
+  votes     PollVote[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model PollOption {
+  id        Int        @id @default(autoincrement())
+  pollId    Int
+  label     String
+  poll      DailyPoll  @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes     PollVote[]
+  createdAt DateTime   @default(now())
+}
+
+model PollVote {
+  id          Int        @id @default(autoincrement())
+  pollId      Int
+  optionId    Int
+  userId      Int?
+  anonymousId String?
+  poll        DailyPoll  @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option      PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user        User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt   DateTime   @default(now())
+
+  @@unique([pollId, anonymousId])
+  @@index([pollId])
+}
+
+model RoutePoint {
+  id          Int      @id @default(autoincrement())
+  routeKey    String   @default("uniguajira-riohacha")
+  title       String
+  description String?
+  lat         Float
+  lng         Float
+  progress    Int
+  order       Int
+  createdAt   DateTime @default(now())
+
+  @@index([routeKey, order])
 }
 
 model Event {

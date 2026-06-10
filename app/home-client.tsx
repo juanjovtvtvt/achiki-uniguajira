@@ -7,8 +7,10 @@ import { CategoryDrawer } from '@/components/newspaper/CategoryDrawer'
 import { CategorySidebar } from '@/components/newspaper/CategorySidebar'
 import { NewsFeed } from '@/components/newspaper/NewsFeed'
 import { EditorialColumn } from '@/components/newspaper/EditorialColumn'
+import { EngagementPanel } from '@/components/newspaper/EngagementPanel'
 import { Footer } from '@/components/newspaper/Footer'
 import Link from 'next/link'
+import type { HomePoll, HomeRoutePoint, PublicationOfDay } from '@/lib/content'
 
 type MobileTab = 'noticias' | 'columna'
 type PublicSession = {
@@ -26,9 +28,12 @@ interface HomeClientProps {
   categories: Category[]
   events: EventItem[]
   session: PublicSession
+  publicationOfDay: PublicationOfDay | null
+  activePoll: HomePoll | null
+  routePoints: HomeRoutePoint[]
 }
 
-export function HomeClient({ articles, columns, categories, events, session }: HomeClientProps) {
+export function HomeClient({ articles, columns, categories, events, session, publicationOfDay, activePoll, routePoints }: HomeClientProps) {
   const [activeCategory, setActiveCategory] = useState<Category | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [mobileTab, setMobileTab] = useState<MobileTab>('noticias')
@@ -110,6 +115,8 @@ export function HomeClient({ articles, columns, categories, events, session }: H
               <div className="space-y-8">
                 <EditorialColumn columns={columns} />
                 <Divider />
+                <EngagementPanel publicationOfDay={publicationOfDay} activePoll={activePoll} routePoints={routePoints} />
+                <Divider />
                 <EventsSidebar events={events} />
                 <NewsletterBox />
               </div>
@@ -119,6 +126,8 @@ export function HomeClient({ articles, columns, categories, events, session }: H
           <aside className="hidden lg:block lg:pl-7 lg:border-l lg:border-border min-w-0" aria-label="Columna editorial y eventos">
             <div className="sticky top-6 space-y-8">
               <EditorialColumn columns={columns} />
+              <Divider />
+              <EngagementPanel publicationOfDay={publicationOfDay} activePoll={activePoll} routePoints={routePoints} />
               <Divider />
               <EventsSidebar events={events} />
               <NewsletterBox />

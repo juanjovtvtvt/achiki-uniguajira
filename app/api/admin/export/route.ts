@@ -16,6 +16,11 @@ export async function GET() {
     publicationTags,
     events,
     subscribers,
+    routePoints,
+    polls,
+    pollOptions,
+    pollVotes,
+    publicationReactions,
   ] = await Promise.all([
     prisma.program.findMany(),
     prisma.user.findMany({
@@ -47,6 +52,11 @@ export async function GET() {
     prisma.publicationTag.findMany(),
     prisma.event.findMany(),
     prisma.subscriber.findMany(),
+    prisma.routePoint.findMany(),
+    prisma.dailyPoll.findMany(),
+    prisma.pollOption.findMany(),
+    prisma.pollVote.findMany(),
+    prisma.publicationReaction.findMany(),
   ])
 
   return NextResponse.json({
@@ -64,6 +74,11 @@ export async function GET() {
       publicationTags: publicationTags.length,
       events: events.length,
       subscribers: subscribers.length,
+      routePoints: routePoints.length,
+      polls: polls.length,
+      pollOptions: pollOptions.length,
+      pollVotes: pollVotes.length,
+      publicationReactions: publicationReactions.length,
     },
     data: {
       programs,
@@ -76,6 +91,11 @@ export async function GET() {
       publicationTags,
       events,
       subscribers,
+      routePoints,
+      polls,
+      pollOptions,
+      pollVotes,
+      publicationReactions,
     },
   })
 }

@@ -1,14 +1,17 @@
 import { HomeClient } from '@/app/home-client'
 import { getSession } from '@/lib/auth'
-import { getArticles, getCategories, getColumns, getEvents } from '@/lib/content'
+import { getActivePoll, getArticles, getCampusRoute, getCategories, getColumns, getEvents, getPublicationOfDay } from '@/lib/content'
 
 export default async function HomePage() {
-  const [articles, columns, categories, events, session] = await Promise.all([
+  const [articles, columns, categories, events, session, publicationOfDay, activePoll, routePoints] = await Promise.all([
     getArticles(),
     getColumns(),
     getCategories(),
     getEvents(),
     getSession(),
+    getPublicationOfDay(),
+    getActivePoll(),
+    getCampusRoute(),
   ])
 
   return (
@@ -18,6 +21,9 @@ export default async function HomePage() {
       categories={categories.map((category) => category.name)}
       events={events}
       session={session}
+      publicationOfDay={publicationOfDay}
+      activePoll={activePoll}
+      routePoints={routePoints}
     />
   )
 }

@@ -2,15 +2,20 @@ import { PrismaClient } from '@prisma/client'
 import fs from 'fs'
 import path from 'path'
 
+const DB_SCHEMA_VERSION = '2026-06-10-engagement'
+
 function prepareSqliteForServerless() {
   if (!process.env.VERCEL) return
   if (process.env.DATABASE_URL && !process.env.DATABASE_URL.startsWith('file:')) return
 
   const bundledDb = path.join(process.cwd(), 'prisma', 'achiki.db')
   const tmpDb = path.join('/tmp', 'achiki.db')
+  const marker = path.join('/tmp', 'achiki-db-version')
+  const currentVersion = fs.existsSync(marker) ? fs.readFileSync(marker, 'utf8') : null
 
-  if (fs.existsSync(bundledDb)) {
+  if (fs.existsSync(bundledDb) && (!fs.existsSync(tmpDb) || currentVersion !== DB_SCHEMA_VERSION)) {
     fs.copyFileSync(bundledDb, tmpDb)
+    fs.writeFileSync(marker, DB_SCHEMA_VERSION)
   }
 
   process.env.DATABASE_URL = `file:${tmpDb}`

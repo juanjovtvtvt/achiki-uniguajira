@@ -142,6 +142,41 @@ const events = [
   { title: 'Semana de la Cultura Wayuu', slug: 'semana-cultura-wayuu', location: 'Campus Riohacha', startsAt: new Date('2025-06-14T10:00:00-05:00') },
 ]
 
+const routePoints = [
+  {
+    title: 'Universidad de La Guajira',
+    description: 'Salida desde el campus principal.',
+    lat: 11.525,
+    lng: -72.924,
+    progress: 0,
+    order: 1,
+  },
+  {
+    title: 'Avenida principal',
+    description: 'Tramo urbano hacia el centro de Riohacha.',
+    lat: 11.533,
+    lng: -72.914,
+    progress: 28,
+    order: 2,
+  },
+  {
+    title: 'Zona comercial',
+    description: 'Punto de mayor movimiento estudiantil.',
+    lat: 11.542,
+    lng: -72.905,
+    progress: 58,
+    order: 3,
+  },
+  {
+    title: 'Riohacha centro',
+    description: 'Llegada estimada al centro historico.',
+    lat: 11.544,
+    lng: -72.907,
+    progress: 100,
+    order: 4,
+  },
+]
+
 async function main() {
   const seededPasswordHash = hashPassword(DEFAULT_USER_PASSWORD)
 
@@ -150,7 +185,12 @@ async function main() {
   await prisma.newsletter.deleteMany()
   await prisma.eventRegistration.deleteMany()
   await prisma.event.deleteMany()
+  await prisma.routePoint.deleteMany()
+  await prisma.pollVote.deleteMany()
+  await prisma.pollOption.deleteMany()
+  await prisma.dailyPoll.deleteMany()
   await prisma.comment.deleteMany()
+  await prisma.publicationReaction.deleteMany()
   await prisma.publicationTag.deleteMany()
   await prisma.publicationImage.deleteMany()
   await prisma.publication.deleteMany()
@@ -256,6 +296,55 @@ async function main() {
 
   for (const event of events) {
     await prisma.event.create({ data: event })
+  }
+
+  for (const point of routePoints) {
+    await prisma.routePoint.create({ data: point })
+  }
+
+  const dailyPoll = await prisma.dailyPoll.create({
+    data: {
+      question: 'Que contenido deberia tener mas presencia esta semana en ACHIKI?',
+      active: true,
+      options: {
+        create: [
+          { label: 'Convocatorias y becas' },
+          { label: 'Eventos del campus' },
+          { label: 'Investigacion estudiantil' },
+          { label: 'Cultura y territorio' },
+        ],
+      },
+    },
+    include: { options: true },
+  })
+
+  for (const [index, option] of dailyPoll.options.entries()) {
+    for (let count = 0; count < index + 1; count += 1) {
+      await prisma.pollVote.create({
+        data: {
+          pollId: dailyPoll.id,
+          optionId: option.id,
+          anonymousId: `seed-${option.id}-${count}`,
+        },
+      })
+    }
+  }
+
+  const topPublication = await prisma.publication.findFirst({
+    where: { type: 'ARTICLE', status: 'PUBLISHED' },
+    orderBy: [{ featured: 'desc' }, { publishedAt: 'desc' }],
+  })
+
+  if (topPublication) {
+    for (const [index, type] of ['LIKE', 'INSIGHTFUL', 'SUPPORT'].entries()) {
+      await prisma.publicationReaction.create({
+        data: {
+          publicationId: topPublication.id,
+          type,
+          anonymousId: `seed-reaction-${index}`,
+        },
+      })
+    }
   }
 
   await prisma.user.create({

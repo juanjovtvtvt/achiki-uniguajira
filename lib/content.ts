@@ -1,6 +1,35 @@
 import { prisma } from '@/lib/db'
 import type { Article, Column, EventItem } from '@/lib/articles'
 
+export type HomeReactionCount = {
+  type: string
+  count: number
+}
+
+export type PublicationOfDay = Article & {
+  reactionCounts: HomeReactionCount[]
+}
+
+export type HomePoll = {
+  id: number
+  question: string
+  options: {
+    id: number
+    label: string
+    votes: number
+  }[]
+}
+
+export type HomeRoutePoint = {
+  id: number
+  title: string
+  description: string | null
+  lat: number
+  lng: number
+  progress: number
+  order: number
+}
+
 function formatDate(date?: Date | null) {
   if (!date) return ''
   return new Intl.DateTimeFormat('es-CO', {
@@ -93,6 +122,87 @@ export async function getEvents(): Promise<EventItem[]> {
     slug: event.slug,
     location: event.location,
   }))
+}
+
+export async function getPublicationOfDay(): Promise<PublicationOfDay | null> {
+  const publication = await prisma.publication.findFirst({
+    where: {
+      type: 'ARTICLE',
+      status: 'PUBLISHED',
+    },
+    include: publicationInclude,
+    orderBy: [{ featured: 'desc' }, { publishedAt: 'desc' }],
+  })
+
+  if (!publication) return null
+
+  const reactions = await prisma.publicationReaction.groupBy({
+    by: ['type'],
+    where: { publicationId: publication.id },
+    _count: { type: true },
+  })
+
+  return {
+    id: publication.id,
+    category: publication.category.name,
+    title: publication.title,
+    summary: publication.summary,
+    author: publication.author.publicSignature ?? publication.author.name,
+    date: formatDate(publication.publishedAt),
+    image: publication.images[0]?.url ?? '/placeholder.jpg',
+    featured: publication.featured,
+    slug: publication.slug,
+    content: publication.content,
+    reactionCounts: reactions.map((reaction) => ({
+      type: reaction.type,
+      count: reaction._count.type,
+    })),
+  }
+}
+
+export async function getActivePoll(): Promise<HomePoll | null> {
+  const poll = await prisma.dailyPoll.findFirst({
+    where: { active: true },
+    include: {
+      options: {
+        include: {
+          _count: {
+            select: { votes: true },
+          },
+        },
+        orderBy: { id: 'asc' },
+      },
+    },
+    orderBy: { startsAt: 'desc' },
+  })
+
+  if (!poll) return null
+
+  return {
+    id: poll.id,
+    question: poll.question,
+    options: poll.options.map((option) => ({
+      id: option.id,
+      label: option.label,
+      votes: option._count.votes,
+    })),
+  }
+}
+
+export async function getCampusRoute(): Promise<HomeRoutePoint[]> {
+  return prisma.routePoint.findMany({
+    where: { routeKey: 'uniguajira-riohacha' },
+    orderBy: { order: 'asc' },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      lat: true,
+      lng: true,
+      progress: true,
+      order: true,
+    },
+  })
 }
 
 export async function getArticleBySlug(slug: string, options?: { includeDrafts?: boolean }) {
