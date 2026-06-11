@@ -17,10 +17,10 @@ const sourceSerif4 = Source_Serif_4({
 })
 
 export const metadata: Metadata = {
-  title: 'Achiki Uniguajira — Periódico Universitario Digital',
+  title: 'Achiki Uniguajira - Periodico Universitario Digital',
   description:
-    'El periódico universitario digital de la Universidad de La Guajira. Noticias, cultura, investigación y vida universitaria desde Riohacha, Colombia.',
-  keywords: 'Universidad de La Guajira, Uniguajira, periódico universitario, La Guajira, Colombia, Riohacha',
+    'El periodico universitario digital de la Universidad de La Guajira. Noticias, cultura, investigacion y vida universitaria desde Riohacha, Colombia.',
+  keywords: 'Universidad de La Guajira, Uniguajira, periodico universitario, La Guajira, Colombia, Riohacha',
   generator: 'v0.app',
   icons: {
     icon: '/icon.svg',
@@ -33,8 +33,13 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className={`${playfairDisplay.variable} ${sourceSerif4.variable} bg-background`}>
+    <html lang="es" className={`${playfairDisplay.variable} ${sourceSerif4.variable} bg-background`} suppressHydrationWarning>
       <body className="font-sans antialiased text-foreground overflow-x-hidden">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "try{var t=localStorage.getItem('achiki-theme');var p=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';var n=t==='dark'||t==='light'?t:p;document.documentElement.classList.toggle('dark',n==='dark');document.documentElement.style.colorScheme=n;}catch(e){}",
+          }}
+        />
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

@@ -1,7 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
-import { authenticateWithPassword, createSession, destroySession, hashPassword, isAdminRole } from '@/lib/auth'
+import { authenticateWithPassword, createSession, destroySession, hashPassword } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 
 function normalizeEmail(value: FormDataEntryValue | null) {
@@ -10,7 +10,7 @@ function normalizeEmail(value: FormDataEntryValue | null) {
 
 function safeNext(value: FormDataEntryValue | null) {
   const next = String(value ?? '').trim()
-  return next.startsWith('/') && !next.startsWith('//') ? next : '/cuenta'
+  return next.startsWith('/') && !next.startsWith('//') ? next : '/'
 }
 
 function displayNameFromEmail(email: string) {
@@ -20,7 +20,7 @@ function displayNameFromEmail(email: string) {
 export async function loginAction(formData: FormData) {
   const username = String(formData.get('username') ?? '').trim()
   const password = String(formData.get('password') ?? '')
-  const next = String(formData.get('next') ?? '').trim()
+  const next = safeNext(formData.get('next'))
 
   const user = await authenticateWithPassword(username, password)
   if (!user) {
@@ -36,11 +36,7 @@ export async function loginAction(formData: FormData) {
     provider: user.authProvider,
   })
 
-  if (next.startsWith('/') && !next.startsWith('//')) {
-    redirect(next)
-  }
-
-  redirect(isAdminRole(user.role) ? '/admin' : '/cuenta')
+  redirect(next)
 }
 
 export async function logoutAction() {

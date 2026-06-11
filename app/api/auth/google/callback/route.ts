@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { createSession, isAdminRole } from '@/lib/auth'
+import { createSession } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 
 type GoogleUser = {
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   const state = requestUrl.searchParams.get('state')
   const cookieStore = await cookies()
   const expectedState = cookieStore.get('achiki_google_state')?.value
-  const next = cookieStore.get('achiki_google_next')?.value || '/cuenta'
+  const next = cookieStore.get('achiki_google_next')?.value || '/'
 
   if (!code || !state || !expectedState || state !== expectedState) {
     return NextResponse.redirect(new URL('/login?google=error', request.url))
@@ -103,7 +103,7 @@ export async function GET(request: Request) {
       provider: 'google',
     })
 
-    const response = NextResponse.redirect(new URL(next.startsWith('/') && !next.startsWith('//') ? next : isAdminRole(user.role) ? '/admin' : '/cuenta', request.url))
+    const response = NextResponse.redirect(new URL(next.startsWith('/') && !next.startsWith('//') ? next : '/', request.url))
     response.cookies.delete('achiki_google_state')
     response.cookies.delete('achiki_google_next')
     return response

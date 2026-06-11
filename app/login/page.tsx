@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { Lock, Mail, Newspaper, UserPlus } from 'lucide-react'
 import { gmailQuickAction, loginAction, registerAction } from '@/app/login/actions'
-import { getSession, isAdminRole } from '@/lib/auth'
+import { getSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
 interface LoginPageProps {
@@ -20,12 +20,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const session = await getSession()
   const googleConfigured = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)
   if (session) {
-    redirect(next || (isAdminRole(session.role) ? '/admin' : '/cuenta'))
+    redirect(next || '/')
   }
 
   return (
     <main className="min-h-screen bg-muted/25 flex items-center justify-center px-4 py-10">
-      <section className="w-full max-w-5xl bg-background border border-border">
+      <section className="w-full max-w-4xl bg-background border border-border shadow-sm">
         <div className="px-5 py-5 border-b border-border">
           <div className="flex items-center gap-2 mb-3">
             <Newspaper size={18} className="text-primary" />
@@ -38,7 +38,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             Iniciar sesion
           </h1>
           <p className="font-sans text-sm text-muted-foreground mt-2">
-            Acceso para lectores registrados, autores y equipo editorial.
+            Entra para reaccionar, votar y enviar publicaciones.
           </p>
         </div>
 
@@ -65,7 +65,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               <div className="h-px flex-1 bg-border" />
             </div>
 
-            {googleConfigured ? (
+            {googleConfigured && (
               <Link
                 href={`/api/auth/google${next ? `?next=${encodeURIComponent(next)}` : ''}`}
                 className="micro-lift w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-sans font-semibold border border-border text-foreground hover:bg-muted transition-colors"
@@ -73,13 +73,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 <span className="font-bold">G</span>
                 Continuar con Google
               </Link>
-            ) : (
-              <Alert tone="soft">Google OAuth real queda listo cuando agregues GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET.</Alert>
             )}
 
             <form action={gmailQuickAction} className="space-y-3 border border-border p-3">
               <input type="hidden" name="next" value={next ?? ''} />
-              <p className="font-sans text-xs font-semibold uppercase tracking-widest text-primary">Acceso rapido con Gmail</p>
+              <p className="font-sans text-xs font-semibold uppercase tracking-widest text-primary">Entrar con Gmail</p>
               <Field label="Tu Gmail" id="quick-email" name="email" type="email" autoComplete="email" placeholder="tu@gmail.com" />
               <Field label="Nombre visible" id="quick-name" name="name" autoComplete="name" required={false} />
               <button className="micro-lift w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-sans font-semibold border border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors">
@@ -94,16 +92,16 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <div>
               <p className="font-sans text-xs font-semibold uppercase tracking-widest text-primary mb-2">Crear cuenta</p>
               <h2 className="font-display text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
-                Usa tu Gmail propio
+                Crear cuenta
               </h2>
               <p className="font-sans text-sm text-muted-foreground mt-2">
-                Crea una cuenta de lector para reaccionar, votar y enviar publicaciones.
+                Registra tu correo para usar las funciones del periodico.
               </p>
             </div>
             {register === 'invalid' && <Alert tone="error">Correo invalido o clave menor a 6 caracteres.</Alert>}
             {register === 'exists' && <Alert tone="error">Ese correo ya existe. Inicia sesion o usa acceso rapido.</Alert>}
             <Field label="Nombre" id="register-name" name="name" autoComplete="name" />
-            <Field label="Correo Gmail o correo personal" id="register-email" name="email" type="email" autoComplete="email" />
+            <Field label="Correo" id="register-email" name="email" type="email" autoComplete="email" />
             <Field label="Clave nueva" id="register-password" name="password" type="password" autoComplete="new-password" />
             <button className="micro-lift w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-sans font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
               <UserPlus size={15} />
@@ -113,9 +111,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </div>
 
         <div className="px-5 py-4 border-t border-border">
-          <div className="font-sans text-xs text-muted-foreground leading-relaxed">
-            Usuarios sembrados: autores con correos `@uniguajira.edu.co`. Clave inicial local: `achiki2026`.
-          </div>
           <Link href="/" className="inline-block mt-3 font-sans text-xs text-muted-foreground hover:text-foreground transition-colors">
             Volver al sitio
           </Link>

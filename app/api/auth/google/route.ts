@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   }
 
   const requestUrl = new URL(request.url)
-  const next = requestUrl.searchParams.get('next') || '/cuenta'
+  const next = requestUrl.searchParams.get('next') || '/'
   const state = crypto.randomBytes(24).toString('hex')
   const redirectUri = `${getBaseUrl(request)}/api/auth/google/callback`
   const googleUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
     path: '/',
     maxAge: 60 * 10,
   })
-  response.cookies.set('achiki_google_next', next.startsWith('/') && !next.startsWith('//') ? next : '/cuenta', {
+  response.cookies.set('achiki_google_next', next.startsWith('/') && !next.startsWith('//') ? next : '/', {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',

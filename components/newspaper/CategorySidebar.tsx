@@ -21,7 +21,7 @@ export function CategorySidebar({ activeCategory, onCategoryChange, categories }
       <nav>
         <button
           onClick={() => onCategoryChange(null)}
-          className={`w-full flex items-center gap-2 py-2.5 border-b border-border text-left transition-colors group ${
+          className={`micro-lift w-full flex items-center gap-2 py-2.5 border-b border-border text-left transition-colors group ${
             activeCategory === null ? 'text-primary' : 'text-foreground hover:text-primary'
           }`}
         >
@@ -33,7 +33,7 @@ export function CategorySidebar({ activeCategory, onCategoryChange, categories }
           <button
             key={category}
             onClick={() => onCategoryChange(category)}
-            className={`w-full flex items-center gap-2 py-2.5 border-b border-border text-left transition-colors group ${
+            className={`micro-lift w-full flex items-center gap-2 py-2.5 border-b border-border text-left transition-colors group ${
               activeCategory === category ? 'text-primary' : 'text-foreground hover:text-primary'
             }`}
           >

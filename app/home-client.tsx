@@ -20,7 +20,7 @@ type PublicSession = {
 } | null
 
 const TICKER_TEXT =
-  'Rector de Uniguajira firma convenio con universidades de Mexico y Brasil · Festival Wayuu de Arte y Ciencia 2025: inscripciones abiertas · Nueva biblioteca digital disponible · Semillero de investigacion gana premio nacional · '
+  'Rector de Uniguajira firma convenio con universidades de Mexico y Brasil - Festival Wayuu de Arte y Ciencia 2025: inscripciones abiertas - Nueva biblioteca digital disponible - Semillero de investigacion gana premio nacional - '
 
 interface HomeClientProps {
   articles: Article[]
@@ -114,7 +114,9 @@ export function HomeClient({ articles, columns, categories, events, session, pub
             </div>
 
             <div role="tabpanel" aria-label="Noticias" className={mobileTab === 'noticias' ? 'block' : 'hidden lg:block'}>
-              <NewsFeed activeCategory={activeCategory} articles={articles} />
+              <div key={activeCategory ?? 'todo'} className="category-panel">
+                <NewsFeed activeCategory={activeCategory} articles={articles} />
+              </div>
             </div>
 
             <div role="tabpanel" aria-label="Columna, eventos y boletin" className={mobileTab === 'columna' ? 'block lg:hidden' : 'hidden'}>

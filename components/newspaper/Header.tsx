@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Menu, LogIn, Pencil, Newspaper, Settings, UserCircle } from 'lucide-react'
+import { ThemeToggle } from './ThemeToggle'
 
 interface HeaderProps {
   onMenuOpen: () => void
@@ -30,13 +31,16 @@ export function Header({ onMenuOpen, session }: HeaderProps) {
           Medio estudiantil independiente
         </p>
 
-        <UserActions session={session} />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <UserActions session={session} />
+        </div>
       </div>
 
       <div className="px-4 md:px-6 py-5 md:py-7 flex items-center gap-4">
         <button
           onClick={onMenuOpen}
-          className="lg:hidden flex items-center justify-center w-9 h-9 border border-border text-foreground hover:bg-muted transition-colors flex-shrink-0"
+          className="micro-lift lg:hidden flex items-center justify-center w-9 h-9 border border-border text-foreground hover:bg-muted transition-colors flex-shrink-0"
           aria-label="Abrir menu de categorias"
           aria-expanded="false"
           aria-controls="category-drawer"
@@ -76,7 +80,7 @@ function UserActions({ session }: { session: HeaderProps['session'] }) {
       <div className="flex items-center gap-2 flex-shrink-0">
         <Link
           href="/login"
-          className="flex items-center justify-center gap-1.5 text-[11px] font-sans text-foreground/65 hover:text-foreground transition-colors"
+          className="micro-lift flex items-center justify-center gap-1.5 text-[11px] font-sans text-foreground/65 hover:text-foreground transition-colors"
           aria-label="Iniciar sesion"
         >
           <LogIn size={13} />
@@ -92,7 +96,7 @@ function UserActions({ session }: { session: HeaderProps['session'] }) {
     <div className="flex items-center gap-2 flex-shrink-0">
       <Link
         href="/cuenta"
-        className="flex items-center justify-center gap-1.5 text-[11px] font-sans text-foreground/65 hover:text-foreground transition-colors max-w-[150px]"
+        className="micro-lift flex items-center justify-center gap-1.5 text-[11px] font-sans text-foreground/65 hover:text-foreground transition-colors max-w-[150px]"
         aria-label="Mi cuenta"
       >
         <UserCircle size={13} />
@@ -101,7 +105,7 @@ function UserActions({ session }: { session: HeaderProps['session'] }) {
       <div className="w-px h-3 bg-border" />
       <Link
         href="/cuenta/enviar"
-        className="flex items-center justify-center gap-1.5 text-[11px] font-sans font-semibold bg-primary text-primary-foreground px-2 py-1 hover:bg-primary/90 transition-colors"
+        className="micro-lift flex items-center justify-center gap-1.5 text-[11px] font-sans font-semibold bg-primary text-primary-foreground px-2 py-1 hover:bg-primary/90 transition-colors"
         aria-label="Enviar publicacion"
       >
         <Pencil size={11} />
@@ -110,7 +114,7 @@ function UserActions({ session }: { session: HeaderProps['session'] }) {
       {isAdmin && (
         <Link
           href="/admin"
-          className="flex items-center justify-center gap-1.5 text-[11px] font-sans text-foreground/65 hover:text-foreground transition-colors"
+          className="micro-lift flex items-center justify-center gap-1.5 text-[11px] font-sans text-foreground/65 hover:text-foreground transition-colors"
           aria-label="Editar sitio"
         >
           <Settings size={12} />

@@ -80,7 +80,7 @@ export function CategoryDrawer({
         <nav aria-label="Categorias" className="flex-1 overflow-y-auto py-3">
           <button
             onClick={() => handleSelect(null)}
-            className={`w-full flex items-center gap-3 px-5 py-3 text-left transition-colors ${
+            className={`micro-lift w-full flex items-center gap-3 px-5 py-3 text-left transition-colors ${
               activeCategory === null
                 ? 'bg-primary/8 text-primary border-l-2 border-primary'
                 : 'text-foreground hover:bg-muted border-l-2 border-transparent'
@@ -95,7 +95,7 @@ export function CategoryDrawer({
             <button
               key={category}
               onClick={() => handleSelect(category)}
-              className={`w-full flex items-center gap-3 px-5 py-3 text-left transition-colors ${
+              className={`micro-lift w-full flex items-center gap-3 px-5 py-3 text-left transition-colors ${
                 activeCategory === category
                   ? 'bg-primary/8 text-primary border-l-2 border-primary'
                   : 'text-foreground hover:bg-muted border-l-2 border-transparent'
