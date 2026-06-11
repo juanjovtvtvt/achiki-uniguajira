@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
 import Link from 'next/link'
-import { Bus, Heart, MapPin, MessageCircle, Navigation, Sparkles, ThumbsUp } from 'lucide-react'
+import { Bus, Heart, MessageCircle, Sparkles, ThumbsUp } from 'lucide-react'
 import type { HomePoll, HomeRoute, PublicationOfDay } from '@/lib/content'
 
 const reactionLabels = {
@@ -196,8 +196,20 @@ function buildMapProjection(route: HomeRoute) {
   return { projected, tiles }
 }
 
-function pathFromProjected(points: { px: number; py: number }[]) {
-  return points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.px.toFixed(1)} ${point.py.toFixed(1)}`).join(' ')
+function routeSegmentsFromProjected(points: { px: number; py: number }[]) {
+  return points.slice(0, -1).map((point, index) => {
+    const next = points[index + 1]
+    const dx = next.px - point.px
+    const dy = next.py - point.py
+
+    return {
+      id: `${point.id}-${next.id}`,
+      left: (point.px + next.px) / 2,
+      top: (point.py + next.py) / 2,
+      width: Math.max(Math.sqrt(dx * dx + dy * dy), 1),
+      angle: Math.atan2(dy, dx) * (180 / Math.PI),
+    }
+  })
 }
 
 function CampusRouteMap({ routes }: { routes: HomeRoute[] }) {
@@ -209,7 +221,7 @@ function CampusRouteMap({ routes }: { routes: HomeRoute[] }) {
   const { projected, tiles } = buildMapProjection(selectedRoute)
   const first = selectedRoute.points[0]
   const last = selectedRoute.points[selectedRoute.points.length - 1]
-  const routePath = pathFromProjected(projected)
+  const routeSegments = routeSegmentsFromProjected(projected)
   const busStyle = {
     '--bus-p0-x': `${projected[0]?.px ?? 0}px`,
     '--bus-p0-y': `${projected[0]?.py ?? 0}px`,
@@ -233,48 +245,72 @@ function CampusRouteMap({ routes }: { routes: HomeRoute[] }) {
         </span>
       </div>
       <div className="border border-border bg-background overflow-hidden">
-        <div className="relative h-[360px] md:h-[520px] w-full overflow-hidden border-b border-border bg-muted">
-          {tiles.map((tile) => (
-            <img
-              key={`${tile.x}-${tile.y}`}
-              src={`https://tile.openstreetmap.org/${mapZoom}/${tile.x}/${tile.y}.png`}
-              alt=""
-              aria-hidden="true"
-              className="absolute max-w-none select-none"
-              style={{
-                left: `${tile.left}%`,
-                top: `${tile.top}%`,
-                width: `${tile.width}%`,
-                height: `${tile.height}%`,
-              }}
-              draggable={false}
-            />
-          ))}
-          <div className="absolute inset-0 bg-background/10" />
-          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 520" preserveAspectRatio="none" aria-hidden="true">
-            <path d={routePath} fill="none" stroke="rgba(31, 97, 51, 0.28)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
-            <path className="real-route-line" d={routePath} fill="none" stroke="var(--primary)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <div
-            className="absolute flex items-center gap-2 rounded-sm bg-background/95 border border-border px-2 py-1 shadow-sm"
-            style={{ left: `${(projected[0].px / mapWidth) * 100}%`, top: `${(projected[0].py / mapHeight) * 100}%`, transform: 'translate(-8%, -120%)' }}
-          >
-            <MapPin size={13} className="text-primary" />
-            <span className="font-sans text-xs font-semibold">{first.title}</span>
+        <div className="route-3d-shell relative h-[430px] md:h-[620px] w-full border-b border-border bg-[#dfe9df]">
+          <div className="route-3d-horizon" aria-hidden="true" />
+          <div className="route-3d-stage">
+            <div className="route-3d-map">
+              {tiles.map((tile) => (
+                <img
+                  key={`${tile.x}-${tile.y}`}
+                  src={`https://tile.openstreetmap.org/${mapZoom}/${tile.x}/${tile.y}.png`}
+                  alt=""
+                  aria-hidden="true"
+                  className="absolute max-w-none select-none"
+                  style={{
+                    left: `${tile.left}%`,
+                    top: `${tile.top}%`,
+                    width: `${tile.width}%`,
+                    height: `${tile.height}%`,
+                  }}
+                  draggable={false}
+                />
+              ))}
+              <div className="absolute inset-0 bg-[rgba(245,241,232,0.2)]" />
+
+              <div className="absolute inset-0" aria-hidden="true">
+                {routeSegments.map((segment) => (
+                  <span
+                    key={segment.id}
+                    className="route-3d-road"
+                    style={{
+                      left: `${(segment.left / mapWidth) * 100}%`,
+                      top: `${(segment.top / mapHeight) * 100}%`,
+                      width: `${(segment.width / mapWidth) * 100}%`,
+                      transform: `translate(-50%, -50%) rotate(${segment.angle}deg)`,
+                    }}
+                  >
+                    <span />
+                  </span>
+                ))}
+              </div>
+
+              {projected.map((point, index) => (
+                <div
+                  key={point.id}
+                  className="route-3d-stop"
+                  style={{ left: `${(point.px / mapWidth) * 100}%`, top: `${(point.py / mapHeight) * 100}%` }}
+                  title={point.title}
+                >
+                  <span className="route-3d-stop-pin" />
+                  <span className="route-3d-stop-label">{index === 0 ? 'U' : index === projected.length - 1 ? last.title : index + 1}</span>
+                </div>
+              ))}
+
+              <div className="route-3d-bus" style={busStyle} aria-label={`Bus simulado en ruta ${selectedRoute.name}`}>
+                <span className="route-3d-bus-body">
+                  <span className="route-3d-bus-front" />
+                  <span className="route-3d-bus-window route-3d-bus-window-a" />
+                  <span className="route-3d-bus-window route-3d-bus-window-b" />
+                  <span className="route-3d-bus-wheel route-3d-bus-wheel-a" />
+                  <span className="route-3d-bus-wheel route-3d-bus-wheel-b" />
+                </span>
+              </div>
+            </div>
           </div>
-          <div
-            className="absolute flex items-center gap-2 rounded-sm bg-background/95 border border-border px-2 py-1 shadow-sm"
-            style={{ left: `${(projected[projected.length - 1].px / mapWidth) * 100}%`, top: `${(projected[projected.length - 1].py / mapHeight) * 100}%`, transform: 'translate(-90%, -120%)' }}
-          >
-            <Navigation size={13} className="text-accent" />
-            <span className="font-sans text-xs font-semibold">{last.title}</span>
-          </div>
-          <div className="real-route-bus absolute flex items-center justify-center w-9 h-9 rounded-full bg-golden text-golden-foreground border-2 border-background shadow-lg" style={busStyle}>
-            <Bus size={18} />
-          </div>
-          <div className="absolute left-4 bottom-4 rounded-sm bg-background/95 border border-border px-3 py-2">
-            <p className="font-sans text-[10px] uppercase tracking-widest text-muted-foreground">Mapa real de Riohacha</p>
-            <p className="font-sans text-xs font-semibold text-foreground">Ruta {selectedRoute.name}: U - {last.title}</p>
+
+          <div className="absolute left-4 bottom-4 rounded-sm bg-background/95 border border-border px-3 py-2 shadow-sm">
+            <p className="font-sans text-[10px] uppercase tracking-widest text-muted-foreground">Mapa real de Riohacha / Vista 3D</p>
+            <p className="font-sans text-xs font-semibold text-foreground">Ruta {selectedRoute.name}: {first.title} - {last.title}</p>
           </div>
         </div>
 
