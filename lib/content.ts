@@ -29,6 +29,7 @@ export type HomeRoutePoint = {
   lng: number
   progress: number
   order: number
+  isStop: boolean
 }
 
 export type HomeRoute = {
@@ -207,10 +208,11 @@ export async function getCampusRoute(): Promise<HomeRoutePoint[]> {
       description: true,
       lat: true,
       lng: true,
-      progress: true,
-      order: true,
-    },
-  })
+        progress: true,
+        order: true,
+        isStop: true,
+      },
+    })
 }
 
 const routeNames: Record<string, string> = {
@@ -234,10 +236,11 @@ export async function getCampusRoutes(): Promise<HomeRoute[]> {
       description: true,
       lat: true,
       lng: true,
-      progress: true,
-      order: true,
-    },
-  })
+        progress: true,
+        order: true,
+        isStop: true,
+      },
+    })
 
   const grouped = new Map<string, HomeRoutePoint[]>()
   for (const point of points) {

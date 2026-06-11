@@ -68,7 +68,7 @@ export function HomeClient({ articles, columns, categories, events, session, pub
       </div>
 
       <section className="w-full max-w-7xl mx-auto px-4 md:px-6 pt-6">
-        <EngagementSpotlight publicationOfDay={publicationOfDay} activePoll={activePoll} />
+        <EngagementSpotlight publicationOfDay={publicationOfDay} activePoll={activePoll} isAuthenticated={Boolean(session)} />
       </section>
 
       <CampusRouteSection routes={routes} />

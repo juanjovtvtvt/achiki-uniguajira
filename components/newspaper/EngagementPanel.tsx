@@ -23,22 +23,23 @@ interface EngagementPanelProps {
   publicationOfDay: PublicationOfDay | null
   activePoll: HomePoll | null
   routes: HomeRoute[]
+  isAuthenticated?: boolean
 }
 
-export function EngagementPanel({ publicationOfDay, activePoll, routes }: EngagementPanelProps) {
+export function EngagementPanel({ publicationOfDay, activePoll, routes, isAuthenticated = false }: EngagementPanelProps) {
   return (
     <div className="space-y-6">
-      <EngagementSpotlight publicationOfDay={publicationOfDay} activePoll={activePoll} />
+      <EngagementSpotlight publicationOfDay={publicationOfDay} activePoll={activePoll} isAuthenticated={isAuthenticated} />
       <CampusRouteSection routes={routes} />
     </div>
   )
 }
 
-export function EngagementSpotlight({ publicationOfDay, activePoll }: Pick<EngagementPanelProps, 'publicationOfDay' | 'activePoll'>) {
+export function EngagementSpotlight({ publicationOfDay, activePoll, isAuthenticated = false }: Pick<EngagementPanelProps, 'publicationOfDay' | 'activePoll' | 'isAuthenticated'>) {
   return (
     <section className="grid grid-cols-1 lg:grid-cols-2 border-y border-border bg-background" aria-label="Destacados interactivos">
       <div className="lg:border-r border-border min-h-[48vh]">
-        <PublicationOfDayCard publication={publicationOfDay} variant="hero" />
+        <PublicationOfDayCard publication={publicationOfDay} variant="hero" isAuthenticated={isAuthenticated} />
       </div>
       <div className="min-h-[48vh]">
         <DailyPollCard poll={activePoll} variant="hero" />
@@ -51,14 +52,23 @@ export function CampusRouteSection({ routes }: Pick<EngagementPanelProps, 'route
   return <CampusRouteMap routes={routes} />
 }
 
-function PublicationOfDayCard({ publication, variant = 'compact' }: { publication: PublicationOfDay | null; variant?: 'compact' | 'hero' }) {
+function PublicationOfDayCard({ publication, variant = 'compact', isAuthenticated = false }: { publication: PublicationOfDay | null; variant?: 'compact' | 'hero'; isAuthenticated?: boolean }) {
   const [counts, setCounts] = useState(() => publication?.reactionCounts ?? [])
+  const [selectedReaction, setSelectedReaction] = useState<ReactionType | null>(null)
+  const [reactionNotice, setReactionNotice] = useState<string | null>(null)
+  const [pendingReaction, setPendingReaction] = useState<ReactionType | null>(null)
   const total = counts.reduce((sum, reaction) => sum + reaction.count, 0)
 
   if (!publication) return null
 
   const react = async (type: ReactionType) => {
-    setCounts((current) => bumpReaction(current, type))
+    if (!isAuthenticated) {
+      setReactionNotice('Inicia sesion para reaccionar.')
+      return
+    }
+
+    setReactionNotice(null)
+    setPendingReaction(type)
 
     const response = await fetch('/api/reacciones', {
       method: 'POST',
@@ -69,7 +79,12 @@ function PublicationOfDayCard({ publication, variant = 'compact' }: { publicatio
     if (response.ok) {
       const data = await response.json()
       setCounts(data.reactionCounts)
+      setSelectedReaction(data.myReaction)
+    } else if (response.status === 401) {
+      setReactionNotice('Inicia sesion para reaccionar.')
     }
+
+    setPendingReaction(null)
   }
 
   const hero = variant === 'hero'
@@ -105,8 +120,9 @@ function PublicationOfDayCard({ publication, variant = 'compact' }: { publicatio
               <button
                 key={type}
                 type="button"
+                disabled={pendingReaction !== null}
                 onClick={() => react(type)}
-                className="reaction-pop flex items-center justify-center gap-2 border border-border px-2 py-3 text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+                className={`reaction-pop flex items-center justify-center gap-2 border px-2 py-3 transition-colors disabled:opacity-70 ${selectedReaction === type ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:text-primary hover:border-primary/50'}`}
                 title={reactionLabels[type]}
               >
                 <Icon size={hero ? 17 : 14} />
@@ -115,21 +131,18 @@ function PublicationOfDayCard({ publication, variant = 'compact' }: { publicatio
             )
           })}
         </div>
+        {reactionNotice && (
+          <Link href="/login" className="mt-3 inline-block font-sans text-xs font-semibold text-primary hover:underline">
+            {reactionNotice}
+          </Link>
+        )}
       </article>
     </section>
   )
 }
 
-function bumpReaction(counts: { type: string; count: number }[], type: string) {
-  const found = counts.find((reaction) => reaction.type === type)
-  if (found) {
-    return counts.map((reaction) => reaction.type === type ? { ...reaction, count: reaction.count + 1 } : reaction)
-  }
-  return [...counts, { type, count: 1 }]
-}
-
 const tileSize = 256
-const mapZoom = 13
+const mapZoom = 14
 const mapWidth = 1000
 const mapHeight = 520
 
@@ -206,8 +219,10 @@ function CampusRouteMap({ routes }: { routes: HomeRoute[] }) {
   if (!selectedRoute || selectedRoute.points.length === 0) return null
 
   const { projected, tiles } = buildMapProjection(selectedRoute)
-  const first = selectedRoute.points[0]
-  const last = selectedRoute.points[selectedRoute.points.length - 1]
+  const stopPoints = projected.filter((point) => point.isStop)
+  const visibleStops = selectedRoute.points.filter((point) => point.isStop)
+  const first = stopPoints[0] ?? projected[0]
+  const last = stopPoints[stopPoints.length - 1] ?? projected[projected.length - 1]
   const routePath = pathFromProjected(projected)
 
   return (
@@ -247,14 +262,13 @@ function CampusRouteMap({ routes }: { routes: HomeRoute[] }) {
             <path d={routePath} fill="none" stroke="var(--golden)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="9 10" />
             <g className="route-plan-bus">
               <animateMotion dur="9s" repeatCount="indefinite" rotate="auto" path={routePath} />
-              <rect x="-18" y="-10" width="36" height="20" rx="4" fill="var(--golden)" stroke="rgba(36,31,27,0.48)" strokeWidth="2" />
-              <rect x="-11" y="-6" width="10" height="7" rx="1.5" fill="rgba(232,248,250,0.94)" />
-              <rect x="3" y="-6" width="10" height="7" rx="1.5" fill="rgba(232,248,250,0.94)" />
-              <circle cx="-10" cy="9" r="3" fill="rgba(36,31,27,0.84)" />
-              <circle cx="10" cy="9" r="3" fill="rgba(36,31,27,0.84)" />
+              <circle cx="0" cy="0" r="13" fill="rgba(245,241,232,0.94)" stroke="rgba(36,31,27,0.38)" strokeWidth="2" />
+              <rect x="-9" y="-6" width="18" height="12" rx="3" fill="var(--golden)" stroke="rgba(36,31,27,0.5)" strokeWidth="1.5" />
+              <rect x="-5" y="-3" width="4" height="4" rx="1" fill="rgba(232,248,250,0.94)" />
+              <rect x="2" y="-3" width="4" height="4" rx="1" fill="rgba(232,248,250,0.94)" />
             </g>
           </svg>
-          {projected.map((point, index) => (
+          {stopPoints.map((point, index) => (
             <div
               key={point.id}
               className="route-plan-stop"
@@ -262,7 +276,7 @@ function CampusRouteMap({ routes }: { routes: HomeRoute[] }) {
               title={point.title}
             >
               <span className="route-plan-stop-dot" />
-              <span className="route-plan-stop-label">{index === 0 ? 'U' : index === projected.length - 1 ? last.title : index + 1}</span>
+              <span className="route-plan-stop-label">{index === 0 ? 'U' : index === stopPoints.length - 1 ? last.title : index + 1}</span>
             </div>
           ))}
           <div className="absolute left-4 bottom-4 rounded-sm bg-background/95 border border-border px-3 py-2 shadow-sm">
@@ -277,7 +291,7 @@ function CampusRouteMap({ routes }: { routes: HomeRoute[] }) {
               Escoge la ruta para ver el recorrido simulado sobre mapa real de Riohacha.
             </p>
             <p className="font-sans text-[10px] uppercase tracking-widest text-primary">
-              {selectedRoute.name} / {selectedRoute.points.length} paradas
+              {selectedRoute.name} / {visibleStops.length} paradas
             </p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
@@ -293,7 +307,7 @@ function CampusRouteMap({ routes }: { routes: HomeRoute[] }) {
             ))}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-            {selectedRoute.points.map((point) => (
+            {visibleStops.map((point) => (
               <div key={point.id} className="flex items-start gap-2 border border-border px-2.5 py-2">
                 <span className="mt-1 h-2 w-2 rotate-45 bg-primary flex-shrink-0" />
                 <div>

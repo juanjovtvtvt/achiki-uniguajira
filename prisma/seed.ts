@@ -142,81 +142,42 @@ const events = [
   { title: 'Semana de la Cultura Wayuu', slug: 'semana-cultura-wayuu', location: 'Campus Riohacha', startsAt: new Date('2025-06-14T10:00:00-05:00') },
 ]
 
-const routePoints = [
-  ['marbella', [
-    ['Universidad de La Guajira', 'Salida desde el campus principal.', 11.5261, -72.9239],
-    ['Porteria principal', 'Salida hacia el corredor universitario.', 11.5269, -72.9211],
-    ['Avenida Circunvalar', 'Giro por avenida principal.', 11.5298, -72.9210],
-    ['Calle 15', 'Ingreso al eje de la calle 15.', 11.5300, -72.9141],
-    ['Carrera 12', 'Tramo urbano continuo.', 11.5356, -72.9140],
-    ['Avenida Primera', 'Conexion hacia el borde costero.', 11.5360, -72.9068],
-    ['Marbella', 'Llegada al sector Marbella.', 11.5432, -72.9065],
-  ]],
-  ['majayura', [
-    ['Universidad de La Guajira', 'Salida desde el campus principal.', 11.5261, -72.9239],
-    ['Glorieta universitaria', 'Salida hacia el corredor oriental.', 11.5241, -72.9205],
-    ['Avenida Circunvalar', 'Tramo por via amplia.', 11.5219, -72.9164],
-    ['Via a Maicao', 'Conexion principal hacia el oriente.', 11.5217, -72.9092],
-    ['Acceso Majayura', 'Entrada al sector.', 11.5190, -72.9026],
-    ['Majayura', 'Llegada al sector Majayura.', 11.5162, -72.8964],
-  ]],
-  ['15-de-mayo', [
-    ['Universidad de La Guajira', 'Salida desde el campus principal.', 11.5261, -72.9239],
-    ['Porteria principal', 'Salida hacia la malla vial.', 11.5269, -72.9211],
-    ['Calle 15 oeste', 'Ingreso al eje de la calle 15.', 11.5300, -72.9210],
-    ['Calle 15 central', 'Tramo por corredor urbano.', 11.5302, -72.9138],
-    ['Mercado nuevo', 'Paso por zona de alto flujo.', 11.5356, -72.9136],
-    ['15 de Mayo', 'Llegada al barrio 15 de Mayo.', 11.5396, -72.9070],
-  ]],
-  ['15-derecho', [
-    ['Universidad de La Guajira', 'Salida desde el campus principal.', 11.5261, -72.9239],
-    ['Calle 15 oeste', 'Ruta directa por la calle 15.', 11.5301, -72.9212],
-    ['Calle 15 centro', 'Continuidad del corredor.', 11.5303, -72.9142],
-    ['Carrera 7', 'Conexion hacia el centro.', 11.5364, -72.9140],
-    ['Centro derecho', 'Llegada por el costado derecho del centro.', 11.5442, -72.9072],
-  ]],
-  ['centro-coquivacoa', [
-    ['Universidad de La Guajira', 'Salida desde el campus principal.', 11.5261, -72.9239],
-    ['Avenida Los Estudiantes', 'Tramo hacia el centro urbano.', 11.5294, -72.9208],
-    ['Calle 15', 'Conexion con corredor comercial.', 11.5299, -72.9140],
-    ['Centro de Riohacha', 'Paso por el centro historico.', 11.5428, -72.9138],
-    ['Avenida Primera', 'Salida hacia zona norte.', 11.5434, -72.9062],
-    ['Coquivacoa', 'Llegada al sector Coquivacoa.', 11.5524, -72.9060],
-  ]],
-  ['dividivi', [
-    ['Universidad de La Guajira', 'Salida desde el campus principal.', 11.5261, -72.9239],
-    ['Entrada suroriental', 'Salida hacia zona residencial.', 11.5226, -72.9210],
-    ['Avenida Circunvalar', 'Tramo principal hacia el suroriente.', 11.5224, -72.9150],
-    ['Carrera intermedia', 'Conexion local de barrio.', 11.5264, -72.9148],
-    ['Calle interna', 'Cruce por via de barrio.', 11.5267, -72.9064],
-    ['Dividivi', 'Llegada al sector Dividivi.', 11.5311, -72.9062],
-  ]],
-  ['la-20', [
-    ['Universidad de La Guajira', 'Salida desde el campus principal.', 11.5261, -72.9239],
-    ['Porteria principal', 'Salida al corredor vial.', 11.5268, -72.9212],
-    ['Calle 20 oeste', 'Ingreso al corredor de la calle 20.', 11.5293, -72.9210],
-    ['Calle 20 central', 'Tramo por la calle 20.', 11.5294, -72.9137],
-    ['Mercado nuevo', 'Paso por zona de comercio.', 11.5351, -72.9135],
-    ['La 20', 'Llegada a la zona de La 20.', 11.5402, -72.9068],
-  ]],
-  ['27-37', [
-    ['Universidad de La Guajira', 'Salida desde el campus principal.', 11.5261, -72.9239],
-    ['Calle 27 oeste', 'Conexion hacia la malla urbana occidental.', 11.5238, -72.9210],
-    ['Calle 27 central', 'Tramo recto por corredor local.', 11.5237, -72.9140],
-    ['Carrera 37', 'Giro hacia el sur.', 11.5193, -72.9140],
-    ['Corredor 27-37', 'Tramo interno de la ruta.', 11.5192, -72.9068],
-    ['27-37', 'Llegada al corredor 27-37.', 11.5151, -72.9068],
-  ]],
-].flatMap(([routeKey, points]) =>
-  (points as [string, string, number, number][]).map(([title, description, lat, lng], index, all) => ({
-    routeKey: routeKey as string,
-    title,
-    description,
-    lat,
-    lng,
-    progress: Math.round((index / Math.max(all.length - 1, 1)) * 100),
-    order: index + 1,
-  })),
+const routeShapes: Record<string, [number, number][]> = {
+  '15-de-mayo': [[11.525443, -72.923889], [11.525278, -72.923598], [11.525477, -72.922448], [11.525542, -72.91945], [11.526214, -72.916216], [11.528873, -72.916505], [11.530573, -72.918223], [11.533254, -72.917725], [11.535663, -72.917267], [11.538794, -72.916008], [11.541317, -72.911367], [11.543345, -72.907643], [11.544393, -72.907101], [11.544424, -72.906843], [11.541797, -72.905412], [11.539576, -72.906996]],
+  '15-derecho': [[11.525443, -72.923889], [11.525303, -72.924144], [11.525354, -72.922698], [11.525501, -72.921514], [11.525555, -72.919033], [11.525988, -72.916192], [11.528681, -72.916256], [11.529484, -72.916608], [11.531078, -72.91813], [11.533254, -72.917725], [11.535663, -72.917267], [11.538534, -72.916463], [11.540321, -72.913153], [11.54204, -72.910059], [11.543419, -72.907561], [11.544193, -72.90718]],
+  '27-37': [[11.525443, -72.923889], [11.525299, -72.92372], [11.525385, -72.922613], [11.525313, -72.921103], [11.522829, -72.92115], [11.521946, -72.918855], [11.522489, -72.916353], [11.523357, -72.911877], [11.524152, -72.908361], [11.524833, -72.905326], [11.524129, -72.903369], [11.522082, -72.903141], [11.52074, -72.903761], [11.518575, -72.904915], [11.51657, -72.905611], [11.5151, -72.906768]],
+  'centro-coquivacoa': [[11.525443, -72.923889], [11.525327, -72.923247], [11.525511, -72.921076], [11.525612, -72.915996], [11.528804, -72.916238], [11.53084, -72.918174], [11.533798, -72.917627], [11.538534, -72.916463], [11.541125, -72.911714], [11.543419, -72.907561], [11.544509, -72.907024], [11.54472, -72.906703], [11.546566, -72.905942], [11.550078, -72.906612], [11.551181, -72.90691], [11.552706, -72.906116]],
+  dividivi: [[11.525443, -72.923889], [11.525303, -72.924144], [11.525335, -72.923039], [11.525504, -72.921926], [11.524557, -72.921177], [11.521476, -72.921094], [11.522034, -72.918408], [11.522489, -72.916353], [11.523267, -72.912435], [11.523852, -72.909757], [11.524547, -72.906608], [11.525004, -72.904408], [11.526227, -72.903563], [11.528113, -72.903822], [11.529343, -72.903659], [11.531524, -72.905767]],
+  'la-20': [[11.525443, -72.923889], [11.525299, -72.92372], [11.525354, -72.922698], [11.525511, -72.921076], [11.525559, -72.918638], [11.526214, -72.916216], [11.528804, -72.916238], [11.530292, -72.918276], [11.531656, -72.918022], [11.533798, -72.917627], [11.536633, -72.917083], [11.538794, -72.916008], [11.541125, -72.911714], [11.543122, -72.908047], [11.54279, -72.907246], [11.540226, -72.906668]],
+  majayura: [[11.525443, -72.923889], [11.525278, -72.923598], [11.525436, -72.922539], [11.524557, -72.921177], [11.521633, -72.920333], [11.522361, -72.916841], [11.523267, -72.912435], [11.524152, -72.908361], [11.524833, -72.905326], [11.525196, -72.90282], [11.526239, -72.897617], [11.523548, -72.89804], [11.52141, -72.898388], [11.518767, -72.898856], [11.516174, -72.899317], [11.5162, -72.896628]],
+  marbella: [[11.525443, -72.923889], [11.525303, -72.924144], [11.525354, -72.922698], [11.525501, -72.921514], [11.525542, -72.91945], [11.525988, -72.916192], [11.527924, -72.916327], [11.529064, -72.916622], [11.53084, -72.918174], [11.532695, -72.917829], [11.534772, -72.917443], [11.538388, -72.916741], [11.539445, -72.914793], [11.541317, -72.911367], [11.543261, -72.907759], [11.543057, -72.906664]],
+}
+
+const routeStops: Record<string, Record<number, [string, string]>> = {
+  '15-de-mayo': { 0: ['Universidad de La Guajira', 'Salida desde el campus principal.'], 6: ['Calle 15', 'Ingreso al eje de la calle 15.'], 11: ['Centro historico', 'Paso por via principal.'], 15: ['15 de Mayo', 'Llegada al barrio 15 de Mayo.'] },
+  '15-derecho': { 0: ['Universidad de La Guajira', 'Salida desde el campus principal.'], 6: ['Calle 15', 'Tramo directo por corredor vial.'], 12: ['Carrera 7', 'Conexion hacia el centro.'], 15: ['Centro derecho', 'Llegada por el costado derecho del centro.'] },
+  '27-37': { 0: ['Universidad de La Guajira', 'Salida desde el campus principal.'], 5: ['Calle 27', 'Conexion hacia malla urbana.'], 10: ['Carrera 37', 'Giro hacia el corredor 37.'], 15: ['27-37', 'Llegada al corredor 27-37.'] },
+  'centro-coquivacoa': { 0: ['Universidad de La Guajira', 'Salida desde el campus principal.'], 5: ['Calle 15', 'Conexion con corredor comercial.'], 10: ['Centro de Riohacha', 'Paso por el centro urbano.'], 15: ['Coquivacoa', 'Llegada al sector Coquivacoa.'] },
+  dividivi: { 0: ['Universidad de La Guajira', 'Salida desde el campus principal.'], 5: ['Avenida Circunvalar', 'Tramo principal hacia el suroriente.'], 11: ['Calle interna', 'Cruce por via de barrio.'], 15: ['Dividivi', 'Llegada al sector Dividivi.'] },
+  'la-20': { 0: ['Universidad de La Guajira', 'Salida desde el campus principal.'], 7: ['Calle 20', 'Ingreso al corredor de la calle 20.'], 12: ['Mercado nuevo', 'Paso por zona de comercio.'], 15: ['La 20', 'Llegada a la zona de La 20.'] },
+  majayura: { 0: ['Universidad de La Guajira', 'Salida desde el campus principal.'], 4: ['Glorieta universitaria', 'Salida hacia el corredor oriental.'], 10: ['Via a Maicao', 'Conexion principal hacia el oriente.'], 15: ['Majayura', 'Llegada al sector Majayura.'] },
+  marbella: { 0: ['Universidad de La Guajira', 'Salida desde el campus principal.'], 6: ['Calle 15', 'Ingreso al corredor urbano.'], 12: ['Centro historico', 'Conexion hacia zona norte.'], 15: ['Marbella', 'Llegada al sector Marbella.'] },
+}
+
+const routePoints = Object.entries(routeShapes).flatMap(([routeKey, points]) =>
+  points.map(([lat, lng], index, all) => {
+    const stop = routeStops[routeKey]?.[index]
+    return {
+      routeKey,
+      title: stop?.[0] ?? `Trazado ${routeKey} ${index + 1}`,
+      description: stop?.[1] ?? null,
+      lat,
+      lng,
+      progress: Math.round((index / Math.max(all.length - 1, 1)) * 100),
+      order: index + 1,
+      isStop: Boolean(stop),
+    }
+  }),
 )
 
 async function main() {

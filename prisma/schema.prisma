@@ -106,6 +106,7 @@ model PublicationReaction {
   createdAt     DateTime    @default(now())
 
   @@index([publicationId])
+  @@unique([publicationId, userId])
   @@unique([publicationId, anonymousId, type])
 }
 
@@ -193,6 +194,7 @@ model RoutePoint {
   lng         Float
   progress    Int
   order       Int
+  isStop      Boolean  @default(true)
   createdAt   DateTime @default(now())
 
   @@index([routeKey, order])

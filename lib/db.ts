@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client'
 import fs from 'fs'
 import path from 'path'
 
-const DB_SCHEMA_VERSION = '2026-06-10-topdown-routes-auth-v3'
+const DB_SCHEMA_VERSION = '2026-06-11-authenticated-reactions-route-shapes'
 
 function prepareSqliteForServerless() {
   if (!process.env.VERCEL) return

@@ -113,6 +113,7 @@ CREATE TABLE PublicationReaction (
   createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (publicationId) REFERENCES Publication(id) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (userId) REFERENCES User(id) ON DELETE SET NULL ON UPDATE CASCADE,
+  UNIQUE(publicationId, userId),
   UNIQUE(publicationId, anonymousId, type)
 );
 CREATE INDEX PublicationReaction_publicationId_idx ON PublicationReaction(publicationId);
@@ -164,6 +165,7 @@ CREATE TABLE RoutePoint (
   lng REAL NOT NULL,
   progress INTEGER NOT NULL,
   "order" INTEGER NOT NULL,
+  isStop BOOLEAN NOT NULL DEFAULT 1,
   createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX RoutePoint_routeKey_order_idx ON RoutePoint(routeKey, "order");
