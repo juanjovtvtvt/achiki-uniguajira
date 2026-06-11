@@ -54,7 +54,9 @@ export function CampusRouteSection({ routes }: Pick<EngagementPanelProps, 'route
 
 function PublicationOfDayCard({ publication, variant = 'compact', isAuthenticated = false }: { publication: PublicationOfDay | null; variant?: 'compact' | 'hero'; isAuthenticated?: boolean }) {
   const [counts, setCounts] = useState(() => publication?.reactionCounts ?? [])
-  const [selectedReaction, setSelectedReaction] = useState<ReactionType | null>(null)
+  const [selectedReaction, setSelectedReaction] = useState<ReactionType | null>(() =>
+    isReactionType(publication?.myReaction) ? publication.myReaction : null,
+  )
   const [reactionNotice, setReactionNotice] = useState<string | null>(null)
   const [pendingReaction, setPendingReaction] = useState<ReactionType | null>(null)
   const total = counts.reduce((sum, reaction) => sum + reaction.count, 0)
@@ -64,6 +66,10 @@ function PublicationOfDayCard({ publication, variant = 'compact', isAuthenticate
   const react = async (type: ReactionType) => {
     if (!isAuthenticated) {
       setReactionNotice('Inicia sesion para reaccionar.')
+      return
+    }
+    if (selectedReaction === type) {
+      setReactionNotice('Ya tienes esta reaccion registrada.')
       return
     }
 
@@ -139,6 +145,10 @@ function PublicationOfDayCard({ publication, variant = 'compact', isAuthenticate
       </article>
     </section>
   )
+}
+
+function isReactionType(value: string | null | undefined): value is ReactionType {
+  return value === 'LIKE' || value === 'INSIGHTFUL' || value === 'SUPPORT'
 }
 
 const tileSize = 256

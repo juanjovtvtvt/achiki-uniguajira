@@ -3,16 +3,16 @@ import { getSession } from '@/lib/auth'
 import { getActivePoll, getArticles, getCampusRoutes, getCategories, getColumns, getEvents, getPublicationOfDay } from '@/lib/content'
 
 export default async function HomePage() {
-  const [articles, columns, categories, events, session, publicationOfDay, activePoll, routes] = await Promise.all([
+  const [articles, columns, categories, events, session, activePoll, routes] = await Promise.all([
     getArticles(),
     getColumns(),
     getCategories(),
     getEvents(),
     getSession(),
-    getPublicationOfDay(),
     getActivePoll(),
     getCampusRoutes(),
   ])
+  const publicationOfDay = await getPublicationOfDay(session?.userId)
 
   return (
     <HomeClient

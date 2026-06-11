@@ -8,6 +8,7 @@ export type HomeReactionCount = {
 
 export type PublicationOfDay = Article & {
   reactionCounts: HomeReactionCount[]
+  myReaction: string | null
 }
 
 export type HomePoll = {
@@ -132,7 +133,7 @@ export async function getEvents(): Promise<EventItem[]> {
   }))
 }
 
-export async function getPublicationOfDay(): Promise<PublicationOfDay | null> {
+export async function getPublicationOfDay(userId?: number | null): Promise<PublicationOfDay | null> {
   const publication = await prisma.publication.findFirst({
     where: {
       type: 'ARTICLE',
@@ -149,6 +150,17 @@ export async function getPublicationOfDay(): Promise<PublicationOfDay | null> {
     where: { publicationId: publication.id },
     _count: { type: true },
   })
+  const myReaction = userId
+    ? await prisma.publicationReaction.findUnique({
+        where: {
+          publicationId_userId: {
+            publicationId: publication.id,
+            userId,
+          },
+        },
+        select: { type: true },
+      })
+    : null
 
   return {
     id: publication.id,
@@ -165,6 +177,7 @@ export async function getPublicationOfDay(): Promise<PublicationOfDay | null> {
       type: reaction.type,
       count: reaction._count.type,
     })),
+    myReaction: myReaction?.type ?? null,
   }
 }
 
