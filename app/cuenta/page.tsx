@@ -75,7 +75,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Ingreso</dt>
-                <dd className="font-semibold text-foreground">{session.provider === 'google' ? 'Google' : 'Correo y clave'}</dd>
+                <dd className="font-semibold text-foreground">{labelProvider(session.provider)}</dd>
               </div>
             </dl>
             <Link href="/cuenta/enviar" className="mt-5 w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-sans font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
@@ -136,6 +136,14 @@ function labelRole(role: string) {
     AUTHOR: 'Autor',
     READER: 'Usuario',
   }[role] ?? role
+}
+
+function labelProvider(provider: string) {
+  return {
+    google: 'Google',
+    gmail: 'Gmail',
+    credentials: 'Correo y clave',
+  }[provider] ?? provider
 }
 
 function labelStatus(status: string) {

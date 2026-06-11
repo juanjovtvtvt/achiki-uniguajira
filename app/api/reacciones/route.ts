@@ -25,21 +25,11 @@ export async function POST(request: Request) {
   const session = await getSession()
   const anonymous = await getAnonymousId()
 
-  await prisma.publicationReaction.upsert({
-    where: {
-      publicationId_anonymousId_type: {
-        publicationId,
-        anonymousId: anonymous.id,
-        type,
-      },
-    },
-    create: {
+  await prisma.publicationReaction.create({
+    data: {
       publicationId,
       type,
-      anonymousId: anonymous.id,
-      userId: session?.userId ?? null,
-    },
-    update: {
+      anonymousId: `${anonymous.id}-${crypto.randomBytes(6).toString('hex')}`,
       userId: session?.userId ?? null,
     },
   })
