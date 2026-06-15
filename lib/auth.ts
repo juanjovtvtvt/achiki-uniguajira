@@ -143,9 +143,10 @@ export async function authenticateWithPassword(identifier: string, password: str
   }
 
   const normalized = identifier.toLowerCase()
+  const emailCandidates = normalized.includes('@') ? [normalized] : [normalized, `${normalized}@achiki.local`]
   const user = await prisma.user.findFirst({
     where: {
-      OR: [{ email: normalized }, { name: identifier }],
+      OR: [{ email: { in: emailCandidates } }, { name: identifier }],
       status: 'ACTIVE',
     },
   })

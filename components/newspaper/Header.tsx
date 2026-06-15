@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { Menu, LogIn, Pencil, Newspaper, Settings, UserCircle } from 'lucide-react'
 import { ThemeToggle } from './ThemeToggle'
 
@@ -14,18 +15,22 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuOpen, session }: HeaderProps) {
-  const today = new Date().toLocaleDateString('es-CO', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
+  const [today, setToday] = useState('')
+
+  useEffect(() => {
+    setToday(new Date().toLocaleDateString('es-CO', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }))
+  }, [])
 
   return (
     <header className="w-full bg-background border-b border-border">
       <div className="border-b border-border/60 px-4 md:px-6 py-1.5 flex items-center justify-between gap-4">
         <p className="text-[10px] font-sans text-muted-foreground uppercase tracking-widest hidden sm:block capitalize">
-          {today}
+          {today || 'Medio estudiantil independiente'}
         </p>
         <p className="text-[10px] font-sans text-muted-foreground uppercase tracking-widest sm:hidden">
           Medio estudiantil independiente

@@ -5,10 +5,9 @@ import { prisma } from '@/lib/db'
 export const dynamic = 'force-dynamic'
 
 export default async function AdminSystemPage() {
-  const [publications, categories, events, users, subscribers] = await Promise.all([
+  const [publications, categories, users, subscribers] = await Promise.all([
     prisma.publication.count(),
     prisma.category.count(),
-    prisma.event.count(),
     prisma.user.count(),
     prisma.subscriber.count(),
   ])
@@ -37,7 +36,6 @@ export default async function AdminSystemPage() {
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-sans text-sm">
             <Row label="Publicaciones" value={publications} />
             <Row label="Categorias" value={categories} />
-            <Row label="Eventos" value={events} />
             <Row label="Usuarios" value={users} />
             <Row label="Suscriptores" value={subscribers} />
             <Row label="Entorno" value={isVercel ? 'Produccion' : 'Local'} />
@@ -48,7 +46,7 @@ export default async function AdminSystemPage() {
           <div className="bg-background border border-border p-5">
             <h2 className="font-sans text-sm font-bold text-foreground mb-3">Exportar respaldo</h2>
             <p className="font-sans text-xs leading-relaxed text-muted-foreground mb-4">
-              Descarga una copia JSON de publicaciones, categorias, usuarios, eventos y suscriptores.
+              Descarga una copia JSON de publicaciones, categorias, usuarios y suscriptores.
             </p>
             <Link href="/api/admin/export" className="inline-flex items-center justify-center gap-2 w-full px-4 py-2 text-sm font-sans font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
               <Download size={15} />
@@ -59,7 +57,7 @@ export default async function AdminSystemPage() {
           <div className="bg-background border border-border p-5">
             <h2 className="font-sans text-sm font-bold text-foreground mb-3">Persistencia</h2>
             <p className="font-sans text-xs leading-relaxed text-muted-foreground">
-              La aplicacion usa PostgreSQL en Neon para conservar usuarios, publicaciones, comentarios, reacciones, boletines, rutas y eventos en produccion.
+              La aplicacion usa PostgreSQL en Neon para conservar usuarios, publicaciones, comentarios, reacciones, boletines y rutas en produccion.
             </p>
           </div>
         </aside>

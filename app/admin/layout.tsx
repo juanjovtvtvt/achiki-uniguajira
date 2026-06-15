@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CalendarDays, Database, FileText, Home, LogOut, Mail, PlusCircle, Settings, Tags, Users } from 'lucide-react'
+import { Database, FileText, Home, LogOut, Mail, PlusCircle, Settings, Tags, Users } from 'lucide-react'
 import { logoutAction } from '@/app/login/actions'
 import { requireAdmin } from '@/lib/auth'
 
@@ -26,10 +26,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/admin/categorias" className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-sans text-muted-foreground hover:text-foreground transition-colors">
               <Tags size={14} />
               Categorias
-            </Link>
-            <Link href="/admin/eventos" className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-sans text-muted-foreground hover:text-foreground transition-colors">
-              <CalendarDays size={14} />
-              Eventos
             </Link>
             <Link href="/admin/usuarios" className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-sans text-muted-foreground hover:text-foreground transition-colors">
               <Users size={14} />

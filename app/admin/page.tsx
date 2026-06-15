@@ -1,15 +1,14 @@
 import Link from 'next/link'
-import { CalendarDays, FileText, Mail, Tags, Users } from 'lucide-react'
+import { FileText, Mail, Tags, Users } from 'lucide-react'
 import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminPage() {
-  const [publications, users, categories, events, subscribers, latest] = await Promise.all([
+  const [publications, users, categories, subscribers, latest] = await Promise.all([
     prisma.publication.count(),
     prisma.user.count(),
     prisma.category.count(),
-    prisma.event.count(),
     prisma.subscriber.count(),
     prisma.publication.findMany({
       include: { category: true, author: true },
@@ -32,11 +31,10 @@ export default async function AdminPage() {
         </Link>
       </div>
 
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-8">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
         <Metric href="/admin/articulos" icon={<FileText size={18} />} label="Publicaciones" value={publications} />
         <Metric href="/admin/usuarios" icon={<Users size={18} />} label="Usuarios" value={users} />
         <Metric href="/admin/categorias" icon={<Tags size={18} />} label="Categorias" value={categories} />
-        <Metric href="/admin/eventos" icon={<CalendarDays size={18} />} label="Eventos" value={events} />
         <Metric href="/admin/suscriptores" icon={<Mail size={18} />} label="Suscriptores" value={subscribers} />
       </section>
 

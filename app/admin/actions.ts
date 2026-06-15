@@ -189,7 +189,6 @@ export async function createCategory(formData: FormData) {
 
   const name = text(formData, 'name')
   const slug = await uniqueCategorySlug(slugify(text(formData, 'slug') || name))
-  const colorClass = text(formData, 'colorClass') || 'text-primary border-primary'
 
   if (!name) {
     throw new Error('El nombre de la categoria es obligatorio.')
@@ -199,7 +198,7 @@ export async function createCategory(formData: FormData) {
     data: {
       name,
       slug,
-      colorClass,
+      colorClass: 'text-primary border-primary',
     },
   })
 
@@ -214,7 +213,6 @@ export async function updateCategory(id: number, formData: FormData) {
 
   const name = text(formData, 'name')
   const slug = await uniqueCategorySlug(slugify(text(formData, 'slug') || name), id)
-  const colorClass = text(formData, 'colorClass') || 'text-primary border-primary'
 
   if (!name) {
     throw new Error('El nombre de la categoria es obligatorio.')
@@ -225,7 +223,6 @@ export async function updateCategory(id: number, formData: FormData) {
     data: {
       name,
       slug,
-      colorClass,
     },
   })
 

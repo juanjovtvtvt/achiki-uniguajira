@@ -67,13 +67,13 @@ export function LoginClient({ next, error, google, gmail, register }: LoginClien
 
             <Divider />
 
-            <Link
+            <a
               href={googleHref}
               className="micro-lift w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-sans font-semibold border border-border text-foreground hover:bg-muted transition-colors"
             >
               <span className="font-bold">G</span>
               Entrar con Google
-            </Link>
+            </a>
           </section>
 
           <section className="px-5 py-5 space-y-5 category-panel" aria-label="Crear cuenta">
@@ -99,13 +99,13 @@ export function LoginClient({ next, error, google, gmail, register }: LoginClien
 
             <Divider />
 
-            <Link
+            <a
               href={googleHref}
               className="micro-lift w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-sans font-semibold border border-border text-foreground hover:bg-muted transition-colors"
             >
               <span className="font-bold">G</span>
               Crear cuenta con Google
-            </Link>
+            </a>
           </section>
         </div>
 
