@@ -25,7 +25,7 @@ export async function GET(request: Request) {
   const next = cookieStore.get('achiki_google_next')?.value || '/'
 
   if (!code || !state || !expectedState || state !== expectedState) {
-    return NextResponse.redirect(new URL('/login?google=error', request.url))
+    return NextResponse.redirect(new URL('/login?google=state', request.url))
   }
 
   const clientId = process.env.GOOGLE_CLIENT_ID
@@ -50,7 +50,9 @@ export async function GET(request: Request) {
     })
 
     if (!tokenResponse.ok) {
-      return NextResponse.redirect(new URL('/login?google=error', request.url))
+      const tokenError = await tokenResponse.text().catch(() => 'unknown token error')
+      console.error('Google OAuth token exchange failed', tokenResponse.status, tokenError)
+      return NextResponse.redirect(new URL('/login?google=token', request.url))
     }
 
     const tokenData = await tokenResponse.json()
@@ -59,12 +61,14 @@ export async function GET(request: Request) {
     })
 
     if (!userResponse.ok) {
-      return NextResponse.redirect(new URL('/login?google=error', request.url))
+      const profileError = await userResponse.text().catch(() => 'unknown profile error')
+      console.error('Google OAuth profile fetch failed', userResponse.status, profileError)
+      return NextResponse.redirect(new URL('/login?google=profile', request.url))
     }
 
     const googleUser = (await userResponse.json()) as GoogleUser
     if (!googleUser.email || googleUser.email_verified === false) {
-      return NextResponse.redirect(new URL('/login?google=error', request.url))
+      return NextResponse.redirect(new URL('/login?google=profile', request.url))
     }
 
     const existing = await prisma.user.findUnique({
@@ -107,7 +111,8 @@ export async function GET(request: Request) {
     response.cookies.delete('achiki_google_state')
     response.cookies.delete('achiki_google_next')
     return response
-  } catch {
-    return NextResponse.redirect(new URL('/login?google=error', request.url))
+  } catch (error) {
+    console.error('Google OAuth database/session failed', error)
+    return NextResponse.redirect(new URL('/login?google=database', request.url))
   }
 }

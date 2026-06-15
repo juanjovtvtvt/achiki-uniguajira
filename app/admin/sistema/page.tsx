@@ -14,8 +14,7 @@ export default async function AdminSystemPage() {
   ])
 
   const isVercel = Boolean(process.env.VERCEL)
-  const databaseUrl = process.env.DATABASE_URL ?? 'sin configurar'
-  const sqliteMode = databaseUrl.startsWith('file:')
+  const databaseReady = Boolean(process.env.DATABASE_URL)
 
   return (
     <main className="max-w-7xl mx-auto px-4 md:px-6 py-8">
@@ -28,7 +27,7 @@ export default async function AdminSystemPage() {
 
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <StatusCard icon={<Activity size={18} />} title="Aplicacion" value={isVercel ? 'Vercel activo' : 'Local activo'} />
-        <StatusCard icon={<Database size={18} />} title="Base de datos" value={sqliteMode ? 'SQLite' : 'Base externa'} />
+        <StatusCard icon={<Database size={18} />} title="Base de datos" value={databaseReady ? 'PostgreSQL en Neon' : 'Sin configurar'} />
         <StatusCard icon={<ShieldCheck size={18} />} title="Admin" value="Protegido por login" />
       </section>
 
@@ -58,9 +57,9 @@ export default async function AdminSystemPage() {
           </div>
 
           <div className="bg-background border border-border p-5">
-            <h2 className="font-sans text-sm font-bold text-foreground mb-3">Nota de produccion</h2>
+            <h2 className="font-sans text-sm font-bold text-foreground mb-3">Persistencia</h2>
             <p className="font-sans text-xs leading-relaxed text-muted-foreground">
-              SQLite en Vercel sirve para demo y verificacion. Para guardar cambios permanentemente en internet, el siguiente paso es conectar PostgreSQL.
+              La aplicacion usa PostgreSQL en Neon para conservar usuarios, publicaciones, comentarios, reacciones, boletines, rutas y eventos en produccion.
             </p>
           </div>
         </aside>

@@ -10,6 +10,13 @@ __v0_jsx-dev-runtime.ts
 .env
 .env*.local
 
+# Local databases and generated review files
+*.db
+*.db-journal
+rubrica-*.txt
+*.pdf
+tsconfig.tsbuildinfo
+
 # Common ignores
 node_modules
 .next/

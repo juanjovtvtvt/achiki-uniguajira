@@ -61,15 +61,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </p>
         </div>
       </header>
-      {process.env.VERCEL && (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) && (
-        <div className="border-b border-golden/40 bg-golden/10">
-          <div className="max-w-7xl mx-auto px-4 md:px-6 py-2">
-            <p className="text-xs font-sans text-foreground/80">
-              Modo demo en Vercel: SQLite permite visualizar y probar el admin, pero para guardar cambios de forma permanente en produccion se debe conectar PostgreSQL.
-            </p>
-          </div>
-        </div>
-      )}
       {children}
     </div>
   )

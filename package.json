@@ -1,14 +1,14 @@
 {
-  "name": "my-project",
+  "name": "achiki-uniguajira",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint .",
-    "db:push": "python prisma/init-sqlite.py && prisma generate",
-    "db:reset": "python prisma/init-sqlite.py && prisma generate && tsx prisma/seed.ts",
+    "lint": "tsc --noEmit",
+    "db:push": "prisma db push && prisma generate",
+    "db:reset": "prisma db push --force-reset && prisma generate && tsx prisma/seed.ts",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio"
   },

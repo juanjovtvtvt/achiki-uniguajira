@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import type { FormEvent } from 'react'
 import type { Article, Category, Column, EventItem } from '@/lib/articles'
 import { Header } from '@/components/newspaper/Header'
 import { CategoryDrawer } from '@/components/newspaper/CategoryDrawer'
@@ -8,7 +9,6 @@ import { CategorySidebar } from '@/components/newspaper/CategorySidebar'
 import { NewsFeed } from '@/components/newspaper/NewsFeed'
 import { EditorialColumn } from '@/components/newspaper/EditorialColumn'
 import { CampusRouteSection, EngagementSpotlight } from '@/components/newspaper/EngagementPanel'
-import { Footer } from '@/components/newspaper/Footer'
 import Link from 'next/link'
 import type { HomePoll, HomeRoute, PublicationOfDay } from '@/lib/content'
 
@@ -140,7 +140,6 @@ export function HomeClient({ articles, columns, categories, events, session, pub
         </div>
       </main>
 
-      <Footer />
     </div>
   )
 }
@@ -183,6 +182,38 @@ function EventsSidebar({ events }: { events: EventItem[] }) {
 }
 
 function NewsletterBox() {
+  const [newsletterEmail, setNewsletterEmail] = useState('')
+  const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [newsletterMessage, setNewsletterMessage] = useState<string | null>(null)
+
+  async function subscribeToNewsletter(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setNewsletterStatus('loading')
+    setNewsletterMessage(null)
+
+    try {
+      const response = await fetch('/api/suscriptores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newsletterEmail }),
+      })
+      const data = await response.json().catch(() => null)
+
+      if (!response.ok || !data?.ok) {
+        setNewsletterStatus('error')
+        setNewsletterMessage(data?.message ?? 'No fue posible registrar el correo.')
+        return
+      }
+
+      setNewsletterStatus('success')
+      setNewsletterMessage(data.message)
+      setNewsletterEmail('')
+    } catch {
+      setNewsletterStatus('error')
+      setNewsletterMessage('No fue posible conectar con el servidor.')
+    }
+  }
+
   return (
     <section aria-label="Boletin semanal">
       <div className="border-b-2 border-foreground pb-2 mb-3">
@@ -196,17 +227,27 @@ function NewsletterBox() {
       <p className="font-sans text-xs text-muted-foreground mb-3 leading-relaxed">
         Recibe las noticias mas importantes de Uniguajira directamente en tu correo.
       </p>
-      <form action="/api/suscriptores" method="post" className="flex flex-col gap-2">
+      <form onSubmit={subscribeToNewsletter} className="flex flex-col gap-2">
         <input
           type="email"
           name="email"
+          value={newsletterEmail}
+          onChange={(event) => setNewsletterEmail(event.target.value)}
           placeholder="tu@correo.edu.co"
           aria-label="Correo electronico para boletin"
           className="w-full text-xs font-sans px-3 py-2 bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
         />
-        <button className="w-full text-xs font-sans font-semibold bg-primary text-primary-foreground py-2 hover:bg-primary/90 transition-colors uppercase tracking-wider">
-          Suscribirse
+        <button
+          disabled={newsletterStatus === 'loading'}
+          className="micro-lift w-full text-xs font-sans font-semibold bg-primary text-primary-foreground py-2 hover:bg-primary/90 transition-colors uppercase tracking-wider disabled:opacity-70"
+        >
+          {newsletterStatus === 'loading' ? 'Enviando...' : 'Suscribirse'}
         </button>
+        {newsletterMessage && (
+          <p className={`font-sans text-[11px] leading-relaxed ${newsletterStatus === 'error' ? 'text-destructive' : 'text-primary'}`}>
+            {newsletterMessage}
+          </p>
+        )}
       </form>
     </section>
   )

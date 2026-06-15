@@ -67,6 +67,15 @@ const publicationInclude = {
   },
 }
 
+const reactionTypes = ['LIKE', 'INSIGHTFUL', 'SUPPORT'] as const
+
+function normalizeReactionCounts(reactions: { type: string; _count: { type: number } }[]) {
+  return reactionTypes.map((type) => ({
+    type,
+    count: reactions.find((reaction) => reaction.type === type)?._count.type ?? 0,
+  }))
+}
+
 export async function getCategories() {
   return prisma.category.findMany({
     orderBy: { id: 'asc' },
@@ -173,10 +182,31 @@ export async function getPublicationOfDay(userId?: number | null): Promise<Publi
     featured: publication.featured,
     slug: publication.slug,
     content: publication.content,
-    reactionCounts: reactions.map((reaction) => ({
-      type: reaction.type,
-      count: reaction._count.type,
-    })),
+    reactionCounts: normalizeReactionCounts(reactions),
+    myReaction: myReaction?.type ?? null,
+  }
+}
+
+export async function getPublicationReactionState(publicationId: number, userId?: number | null) {
+  const reactions = await prisma.publicationReaction.groupBy({
+    by: ['type'],
+    where: { publicationId },
+    _count: { type: true },
+  })
+  const myReaction = userId
+    ? await prisma.publicationReaction.findUnique({
+        where: {
+          publicationId_userId: {
+            publicationId,
+            userId,
+          },
+        },
+        select: { type: true },
+      })
+    : null
+
+  return {
+    reactionCounts: normalizeReactionCounts(reactions),
     myReaction: myReaction?.type ?? null,
   }
 }
@@ -275,6 +305,20 @@ export async function getArticleBySlug(slug: string, options?: { includeDrafts?:
     },
     include: {
       ...publicationInclude,
+      comments: {
+        where: { status: 'PUBLISHED' },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              avatarUrl: true,
+              publicSignature: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      },
       tags: {
         include: {
           tag: true,

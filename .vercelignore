@@ -1,4 +1,3 @@
 .env
-prisma/achiki.db-journal
 achiki-dev.log
 work-prisma-test/

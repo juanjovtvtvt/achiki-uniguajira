@@ -1,0 +1,12 @@
+<svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+  <rect width="180" height="180" rx="34" fill="#006b3f" />
+  <text
+    x="90"
+    y="125"
+    text-anchor="middle"
+    font-family="'Times New Roman', Times, serif"
+    font-size="118"
+    font-weight="700"
+    fill="#f4c430"
+  >A</text>
+</svg>

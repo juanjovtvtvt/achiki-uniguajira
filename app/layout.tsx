@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   keywords: 'Universidad de La Guajira, Uniguajira, periodico universitario, La Guajira, Colombia, Riohacha',
   generator: 'v0.app',
   icons: {
-    icon: '/icon.svg',
+    icon: '/achiki-favicon.svg',
   },
 }
 

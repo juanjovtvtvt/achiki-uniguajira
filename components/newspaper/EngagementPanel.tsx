@@ -17,7 +17,12 @@ const reactionIcons = {
   SUPPORT: Heart,
 }
 
-type ReactionType = keyof typeof reactionLabels
+export type ReactionType = keyof typeof reactionLabels
+
+export type ReactionCount = {
+  type: string
+  count: number
+}
 
 interface EngagementPanelProps {
   publicationOfDay: PublicationOfDay | null
@@ -53,45 +58,7 @@ export function CampusRouteSection({ routes }: Pick<EngagementPanelProps, 'route
 }
 
 function PublicationOfDayCard({ publication, variant = 'compact', isAuthenticated = false }: { publication: PublicationOfDay | null; variant?: 'compact' | 'hero'; isAuthenticated?: boolean }) {
-  const [counts, setCounts] = useState(() => publication?.reactionCounts ?? [])
-  const [selectedReaction, setSelectedReaction] = useState<ReactionType | null>(() =>
-    isReactionType(publication?.myReaction) ? publication.myReaction : null,
-  )
-  const [reactionNotice, setReactionNotice] = useState<string | null>(null)
-  const [pendingReaction, setPendingReaction] = useState<ReactionType | null>(null)
-  const total = counts.reduce((sum, reaction) => sum + reaction.count, 0)
-
   if (!publication) return null
-
-  const react = async (type: ReactionType) => {
-    if (!isAuthenticated) {
-      setReactionNotice('Inicia sesion para reaccionar.')
-      return
-    }
-    if (selectedReaction === type) {
-      setReactionNotice('Ya tienes esta reaccion registrada.')
-      return
-    }
-
-    setReactionNotice(null)
-    setPendingReaction(type)
-
-    const response = await fetch('/api/reacciones', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ publicationId: publication.id, type }),
-    })
-
-    if (response.ok) {
-      const data = await response.json()
-      setCounts(data.reactionCounts)
-      setSelectedReaction(data.myReaction)
-    } else if (response.status === 401) {
-      setReactionNotice('Inicia sesion para reaccionar.')
-    }
-
-    setPendingReaction(null)
-  }
 
   const hero = variant === 'hero'
 
@@ -112,38 +79,132 @@ function PublicationOfDayCard({ publication, variant = 'compact', isAuthenticate
           </Link>
         </h3>
         <p className={`font-sans leading-relaxed text-muted-foreground mb-4 ${hero ? 'text-base md:text-lg line-clamp-5' : 'text-xs line-clamp-3'}`}>{publication.summary}</p>
-        <div className="flex items-center justify-between gap-2 mb-4 mt-auto">
-          <span className="font-sans text-xs text-muted-foreground">{total} reacciones</span>
+        <div className="flex items-center justify-end gap-2 mb-4 mt-auto">
           <Link href={`/articulos/${publication.slug}`} className="font-sans text-xs font-semibold text-primary hover:underline">
             Leer
           </Link>
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          {(Object.keys(reactionLabels) as ReactionType[]).map((type) => {
-            const Icon = reactionIcons[type]
-            const count = counts.find((reaction) => reaction.type === type)?.count ?? 0
-            return (
-              <button
-                key={type}
-                type="button"
-                disabled={pendingReaction !== null}
-                onClick={() => react(type)}
-                className={`reaction-pop flex items-center justify-center gap-2 border px-2 py-3 transition-colors disabled:opacity-70 ${selectedReaction === type ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:text-primary hover:border-primary/50'}`}
-                title={reactionLabels[type]}
-              >
-                <Icon size={hero ? 17 : 14} />
-                <span className="font-sans text-xs font-semibold">{count}</span>
-              </button>
-            )
-          })}
-        </div>
-        {reactionNotice && (
-          <Link href="/login" className="mt-3 inline-block font-sans text-xs font-semibold text-primary hover:underline">
-            {reactionNotice}
-          </Link>
-        )}
+        <PublicationReactionBar
+          publicationId={publication.id}
+          reactionCounts={publication.reactionCounts}
+          myReaction={publication.myReaction}
+          isAuthenticated={isAuthenticated}
+          iconSize={hero ? 17 : 14}
+        />
       </article>
     </section>
+  )
+}
+
+export function PublicationReactionBar({
+  publicationId,
+  reactionCounts,
+  myReaction,
+  isAuthenticated = false,
+  loginHref = '/login',
+  iconSize = 15,
+}: {
+  publicationId: number
+  reactionCounts: ReactionCount[]
+  myReaction: string | null
+  isAuthenticated?: boolean
+  loginHref?: string
+  iconSize?: number
+}) {
+  const [counts, setCounts] = useState(() => reactionCounts)
+  const [selectedReaction, setSelectedReaction] = useState<ReactionType | null>(() =>
+    isReactionType(myReaction) ? myReaction : null,
+  )
+  const [reactionNotice, setReactionNotice] = useState<string | null>(null)
+  const [pendingReaction, setPendingReaction] = useState<ReactionType | null>(null)
+  const total = counts.reduce((sum, reaction) => sum + reaction.count, 0)
+
+  const react = async (type: ReactionType) => {
+    if (!isAuthenticated) {
+      setReactionNotice('Inicia sesion para reaccionar.')
+      return
+    }
+    if (selectedReaction === type) {
+      setReactionNotice('Ya tienes esta reaccion registrada.')
+      return
+    }
+
+    setReactionNotice(null)
+    setPendingReaction(type)
+    const previousCounts = counts
+    const previousReaction = selectedReaction
+
+    setCounts((current) =>
+      (Object.keys(reactionLabels) as ReactionType[]).map((reactionType) => {
+        const currentCount = current.find((reaction) => reaction.type === reactionType)?.count ?? 0
+        let count = currentCount
+        if (previousReaction === reactionType) count = Math.max(0, count - 1)
+        if (type === reactionType) count += 1
+        return { type: reactionType, count }
+      }),
+    )
+    setSelectedReaction(type)
+
+    try {
+      const response = await fetch('/api/reacciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ publicationId, type }),
+      })
+      const data = await response.json().catch(() => null)
+
+      if (response.ok) {
+        setCounts(data.reactionCounts)
+        setSelectedReaction(data.myReaction)
+      } else {
+        setCounts(previousCounts)
+        setSelectedReaction(previousReaction)
+        setReactionNotice(response.status === 401 ? 'Inicia sesion para reaccionar.' : data?.error ?? 'No fue posible guardar la reaccion.')
+      }
+    } catch {
+      setCounts(previousCounts)
+      setSelectedReaction(previousReaction)
+      setReactionNotice('No fue posible conectar con el servidor.')
+    }
+
+    setPendingReaction(null)
+  }
+
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="font-sans text-xs text-muted-foreground">{total} reacciones</span>
+        {selectedReaction && (
+          <span className="font-sans text-[10px] uppercase tracking-widest text-primary">
+            Tu reaccion: {reactionLabels[selectedReaction]}
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {(Object.keys(reactionLabels) as ReactionType[]).map((type) => {
+          const Icon = reactionIcons[type]
+          const count = counts.find((reaction) => reaction.type === type)?.count ?? 0
+          return (
+            <button
+              key={type}
+              type="button"
+              disabled={pendingReaction !== null}
+              onClick={() => react(type)}
+              className={`reaction-pop flex items-center justify-center gap-2 border px-2 py-3 transition-all disabled:opacity-70 ${selectedReaction === type ? 'border-primary bg-primary/10 text-primary shadow-sm' : 'border-border text-muted-foreground hover:text-primary hover:border-primary/50 hover:-translate-y-0.5'}`}
+              title={reactionLabels[type]}
+            >
+              <Icon size={iconSize} />
+              <span className="font-sans text-xs font-semibold">{count}</span>
+            </button>
+          )
+        })}
+      </div>
+      {reactionNotice && (
+        <Link href={loginHref} className="mt-3 inline-block font-sans text-xs font-semibold text-primary hover:underline">
+          {reactionNotice}
+        </Link>
+      )}
+    </div>
   )
 }
 
