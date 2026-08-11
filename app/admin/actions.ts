@@ -10,7 +10,10 @@ function text(formData: FormData, key: string) {
 }
 
 function numberValue(formData: FormData, key: string) {
-  const value = Number(formData.get(key))
+  const raw = String(formData.get(key) ?? '').trim()
+  if (!raw) return null
+
+  const value = Number(raw)
   return Number.isFinite(value) ? value : null
 }
 
@@ -152,6 +155,28 @@ export async function updateArticle(id: number, formData: FormData) {
   revalidatePath('/admin/articulos')
   revalidatePath(`/articulos/${slug}`)
   redirect('/admin/articulos')
+}
+
+export async function deleteComment(id: number, publicationId: number) {
+  await requireAdmin()
+
+  const publication = await prisma.publication.findUnique({
+    where: { id: publicationId },
+    select: { slug: true },
+  })
+
+  await prisma.comment.deleteMany({
+    where: { id, publicationId },
+  })
+
+  revalidatePath('/')
+  revalidatePath('/admin')
+  revalidatePath('/admin/articulos')
+  revalidatePath(`/admin/articulos/${publicationId}/editar`)
+
+  if (publication) {
+    revalidatePath(`/articulos/${publication.slug}`)
+  }
 }
 
 export async function setArticleStatus(id: number, status: string) {
@@ -395,19 +420,55 @@ export async function updateUser(id: number, formData: FormData) {
 }
 
 export async function deleteUser(id: number) {
-  await requireAdmin()
+  const session = await requireAdmin()
 
-  const publications = await prisma.publication.count({
-    where: { authorId: id },
-  })
-
-  if (publications > 0) {
-    throw new Error('No se puede eliminar un usuario con publicaciones asociadas.')
+  if (session.userId === id) {
+    throw new Error('No puedes eliminar la cuenta con la que tienes la sesion activa.')
   }
 
-  await prisma.user.delete({ where: { id } })
+  const replacement = await prisma.user.findFirst({
+    where: {
+      id: { not: id },
+      role: { in: ['ADMIN', 'EDITOR'] },
+      status: 'ACTIVE',
+    },
+    orderBy: { id: 'asc' },
+    select: { id: true },
+  })
+
+  const fallbackAuthor = replacement ?? (await prisma.user.upsert({
+    where: { email: 'archivo@achiki.local' },
+    create: {
+      name: 'Archivo ACHIKI',
+      email: 'archivo@achiki.local',
+      role: 'ADMIN',
+      status: 'ACTIVE',
+      publicSignature: 'Archivo ACHIKI',
+      authProvider: 'credentials',
+    },
+    update: {
+      role: 'ADMIN',
+      status: 'ACTIVE',
+    },
+    select: { id: true },
+  }))
+
+  await prisma.$transaction([
+    prisma.comment.deleteMany({ where: { userId: id } }),
+    prisma.publicationReaction.deleteMany({ where: { userId: id } }),
+    prisma.pollVote.deleteMany({ where: { userId: id } }),
+    prisma.eventRegistration.deleteMany({ where: { userId: id } }),
+    prisma.publication.updateMany({
+      where: { authorId: id },
+      data: { authorId: fallbackAuthor.id },
+    }),
+    prisma.user.delete({ where: { id } }),
+  ])
+
+  revalidatePath('/')
   revalidatePath('/admin')
   revalidatePath('/admin/usuarios')
+  revalidatePath('/admin/articulos')
 }
 
 export async function setSubscriberActive(id: number, active: boolean) {

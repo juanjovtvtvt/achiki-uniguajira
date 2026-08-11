@@ -17,7 +17,7 @@ export default async function AdminUsersPage() {
       include: {
         program: true,
         _count: {
-          select: { publications: true },
+          select: { publications: true, comments: true, reactions: true },
         },
       },
       orderBy: { name: 'asc' },
@@ -59,7 +59,7 @@ export default async function AdminUsersPage() {
                   <th className="text-left px-4 py-2 font-semibold">Usuario</th>
                   <th className="text-left px-4 py-2 font-semibold">Rol</th>
                   <th className="text-left px-4 py-2 font-semibold">Programa</th>
-                  <th className="text-left px-4 py-2 font-semibold">Publicaciones</th>
+                  <th className="text-left px-4 py-2 font-semibold">Actividad</th>
                   <th className="text-left px-4 py-2 font-semibold">Acciones</th>
                 </tr>
               </thead>
@@ -93,7 +93,11 @@ export default async function AdminUsersPage() {
                         ))}
                       </select>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{user._count.publications}</td>
+                    <td className="px-4 py-3 text-muted-foreground min-w-[150px]">
+                      <p>{user._count.publications} publicaciones</p>
+                      <p>{user._count.comments} comentarios</p>
+                      <p>{user._count.reactions} reacciones</p>
+                    </td>
                     <td className="px-4 py-3 min-w-[180px]">
                       <div className="flex flex-wrap gap-2">
                         <button form={`user-${user.id}`} className="inline-flex items-center gap-1.5 px-2 py-1 text-xs border border-border text-foreground hover:bg-muted transition-colors">
@@ -101,7 +105,7 @@ export default async function AdminUsersPage() {
                           Guardar
                         </button>
                         <form action={deleteUser.bind(null, user.id)}>
-                          <button disabled={user._count.publications > 0} className="inline-flex items-center gap-1.5 px-2 py-1 text-xs border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-40 disabled:pointer-events-none">
+                          <button className="inline-flex items-center gap-1.5 px-2 py-1 text-xs border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors">
                             <Trash2 size={13} />
                             Eliminar
                           </button>
